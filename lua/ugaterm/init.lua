@@ -55,20 +55,25 @@ end
 
 ---@param id integer|nil
 ---@return boolean
-local function winid_is_valid(id)
-  return not not (id and vim.api.nvim_win_is_valid(id))
-end
-
----@param id integer|nil
----@return boolean
 local function bufid_is_valid(id)
   return not not (id and vim.api.nvim_buf_is_valid(id))
 end
 
+---Return true if the terminal window is opened, else false.
+---@return boolean
+function Terminal:is_opened()
+  if self.winid and vim.api.nvim_win_is_valid(self.winid) then
+    return true
+  else
+    self.winid = nil
+    return false
+  end
+end
+
 ---Open a terminal window.
----@return boolean success true if it can be opened, otherwise false
+---@return boolean success true if it can be opened, else false
 function Terminal:_open()
-  if winid_is_valid(self.winid) then
+  if self:is_opened() then
     return false
   end
   vim.cmd(self.open_cmd)
@@ -117,15 +122,14 @@ end
 
 ---Hide a terminal window.
 function Terminal:hide()
-  if winid_is_valid(self.winid) then
+  if self:is_opened() then
     vim.api.nvim_win_hide(self.winid)
   end
-  self.winid = nil
 end
 
 ---Toggle a terminal window.
 function Terminal:toggle()
-  if winid_is_valid(self.winid) then
+  if self:is_opened() then
     self:hide()
   else
     self:open()
@@ -156,7 +160,7 @@ end
 
 ---Rename a current terminal buffer.
 function Terminal:rename()
-  if not winid_is_valid(self.winid) then
+  if not self:is_opened() then
     return
   end
   local buf_cache = self.buf_cache:get()
