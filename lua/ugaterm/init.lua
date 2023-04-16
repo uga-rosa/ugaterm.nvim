@@ -6,12 +6,14 @@ local lru = require("ugaterm.lru")
 
 ---@class Terminal
 ---@field prefix string Terminal buffer name prefix
+---@field filetype string Terminal filetype
 ---@field open_cmd string
 ---@field capacity integer
 ---@field buf_cache LruCache Keys are buffer names, values are buf_cache
 ---@field winid integer?
 local Terminal = {
-  prefix = "terminal",
+  prefix = "ugaterm",
+  filetype = "ugaterm",
   open_cmd = "botright 15sp",
   capacity = 10,
 }
@@ -105,6 +107,7 @@ function Terminal:new_open()
   -- Set buffer name and options
   vim.api.nvim_buf_set_name(bufid, bufname)
   vim.api.nvim_buf_set_option(bufid, "buflisted", false)
+  vim.api.nvim_buf_set_option(bufid, "filetype", self.filetype)
 
   vim.cmd.startinsert()
 end
