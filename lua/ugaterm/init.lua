@@ -165,12 +165,12 @@ function Terminal:delete()
   end
 
   -- Delete a current terminal buffer
-  local buf_cache = self.buf_cache:shift()
-  if not (buf_cache and bufid_is_valid(buf_cache.id)) then
+  local bufid = self.buf_cache:shift()
+  if not bufid_is_valid(bufid) then
     return
   end
   -- The terminal window close too.
-  vim.api.nvim_buf_delete(buf_cache.id, { force = true })
+  vim.api.nvim_buf_delete(bufid, { force = true })
   self.winid = nil
 
   if self.buf_cache:count() > 0 then
