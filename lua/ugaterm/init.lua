@@ -7,6 +7,7 @@ local lru = require("ugaterm.lru")
 ---@class Terminal
 ---@field prefix string Terminal buffer name prefix
 ---@field open_cmd string
+---@field capacity integer
 ---@field buf_cache LruCache Keys are buffer names, values are buf_cache
 ---@field winid integer?
 local Terminal = {
