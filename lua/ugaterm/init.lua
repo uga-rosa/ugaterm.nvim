@@ -10,7 +10,7 @@ local lru = require("ugaterm.lru")
 ---@field open_cmd string
 ---@field capacity integer
 ---@field buf_cache LruCache Keys are buffer names, values are buf_cache
----@field winid integer?
+---@field winid integer|nil
 local Terminal = {
   prefix = "ugaterm",
   filetype = "ugaterm",
@@ -25,7 +25,7 @@ function Terminal.new()
   }, { __index = Terminal })
 end
 
----@param opts table?
+---@param opts table|nil
 function Terminal.setup(opts)
   for k, v in pairs(opts or {}) do
     Terminal[k] = v
@@ -53,13 +53,13 @@ function Terminal.setup(opts)
   end, {})
 end
 
----@param id integer?
+---@param id integer|nil
 ---@return boolean
 local function winid_is_valid(id)
   return not not (id and vim.api.nvim_win_is_valid(id))
 end
 
----@param id integer?
+---@param id integer|nil
 ---@return boolean
 local function bufid_is_valid(id)
   return not not (id and vim.api.nvim_buf_is_valid(id))
@@ -83,7 +83,7 @@ function Terminal:open()
     return
   end
 
-  ---@type buf_cache?
+  ---@type buf_cache|nil
   local buf_cache = self.buf_cache:get()
   if buf_cache and bufid_is_valid(buf_cache.id) then
     -- Open most recently used terminal
