@@ -20,8 +20,8 @@ require("ugaterm").setup({
   - If the terminal has never been opened, UgatermNew is called.
 - UgatermNew
   - Open a new terminal.
-- UgatermClose
-  - Close a terminal window.
+- UgatermHide
+  - Hide a terminal window.
 - UgatermToggle
   - Toggle a terminal window.
 - UgatermSelect

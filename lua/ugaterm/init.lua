@@ -39,8 +39,8 @@ function Terminal.setup(opts)
   vim.api.nvim_create_user_command("UgatermNew", function()
     terminal:new_open()
   end, {})
-  vim.api.nvim_create_user_command("UgatermClose", function()
-    terminal:close()
+  vim.api.nvim_create_user_command("UgatermHide", function()
+    terminal:hide()
   end, {})
   vim.api.nvim_create_user_command("UgatermToggle", function()
     terminal:toggle()
@@ -115,8 +115,8 @@ function Terminal:new_open()
   vim.cmd.startinsert()
 end
 
----Close a terminal window.
-function Terminal:close()
+---Hide a terminal window.
+function Terminal:hide()
   if winid_is_valid(self.winid) then
     vim.api.nvim_win_hide(self.winid)
   end
@@ -126,7 +126,7 @@ end
 ---Toggle a terminal window.
 function Terminal:toggle()
   if winid_is_valid(self.winid) then
-    self:close()
+    self:hide()
   else
     self:open()
   end
