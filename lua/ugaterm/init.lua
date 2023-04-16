@@ -48,10 +48,22 @@ function Terminal.setup(opts)
   end, {})
 end
 
+---@param id integer?
+---@return boolean
+local function winid_is_valid(id)
+  return not not (id and vim.api.nvim_win_is_valid(id))
+end
+
+---@param id integer?
+---@return boolean
+local function bufid_is_valid(id)
+  return not not (id and vim.api.nvim_buf_is_valid(id))
+end
+
 ---Open a terminal window.
 ---@return boolean success true if it can be opened, otherwise false
 function Terminal:_open()
-  if self.winid then
+  if winid_is_valid(self.winid) then
     return false
   end
   vim.cmd(self.open_cmd)
@@ -68,7 +80,7 @@ function Terminal:open()
 
   ---@type buf_cache?
   local buf_cache = self.buf_cache:get()
-  if buf_cache and vim.api.nvim_buf_is_valid(buf_cache.id) then
+  if buf_cache and bufid_is_valid(buf_cache.id) then
     -- Open most recently used terminal
     vim.api.nvim_win_set_buf(self.winid, buf_cache.id)
     vim.cmd.startinsert()
@@ -121,16 +133,15 @@ end
 
 ---Close a terminal window.
 function Terminal:close()
-  if self.winid == nil then
-    return
+  if winid_is_valid(self.winid) then
+    vim.api.nvim_win_hide(self.winid)
   end
-  vim.api.nvim_win_hide(self.winid)
   self.winid = nil
 end
 
 ---Toggle a terminal window.
 function Terminal:toggle()
-  if self.winid then
+  if winid_is_valid(self.winid) then
     self:close()
   else
     self:open()
