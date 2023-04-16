@@ -170,7 +170,7 @@ function Terminal:delete()
   end
 
   -- Delete a current terminal buffer
-  local _, buf_cache = self.buf_cache:shift()
+  local buf_cache = self.buf_cache:shift()
   if not (buf_cache and bufid_is_valid(buf_cache.id)) then
     return
   end
