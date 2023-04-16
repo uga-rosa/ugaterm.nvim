@@ -45,6 +45,9 @@ function Terminal.setup(opts)
   vim.api.nvim_create_user_command("UgatermToggle", function()
     terminal:toggle()
   end, {})
+  vim.api.nvim_create_user_command("UgatermDelete", function()
+    terminal:delete()
+  end, {})
   vim.api.nvim_create_user_command("UgatermSelect", function()
     terminal:select()
   end, {})
@@ -156,6 +159,28 @@ function Terminal:select()
     self:_open()
     vim.api.nvim_win_set_buf(self.winid, buf_cache.id)
   end)
+end
+
+---Delete a current terminal buffer.
+---If there are other terminals, open more recently used one.
+---If this is the last one, close the window too.
+function Terminal:delete()
+  if not self:is_opened() then
+    return
+  end
+
+  -- Delete a current terminal buffer
+  local _, buf_cache = self.buf_cache:shift()
+  if not (buf_cache and bufid_is_valid(buf_cache.id)) then
+    return
+  end
+  -- The terminal window close too.
+  vim.api.nvim_buf_delete(buf_cache.id, { force = true })
+  self.winid = nil
+
+  if self.buf_cache:count() > 0 then
+    self:open()
+  end
 end
 
 ---Rename a current terminal buffer.
