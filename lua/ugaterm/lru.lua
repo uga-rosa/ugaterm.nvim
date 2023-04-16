@@ -13,11 +13,7 @@ local CacheNode = {
 function CacheNode.new(key, value)
   local self = setmetatable({}, { __index = CacheNode })
   self.key = key
-  if value ~= nil then
-    self.value = value
-  else
-    self.value = self._dummy
-  end
+  self.value = vim.F.if_nil(value, self._dummy)
   return self
 end
 
