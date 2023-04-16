@@ -51,9 +51,9 @@ function Terminal.setup(opts)
   vim.api.nvim_create_user_command("UgatermSelect", function()
     terminal:select()
   end, {})
-  vim.api.nvim_create_user_command("UgatermRename", function()
-    terminal:rename()
-  end, {})
+  vim.api.nvim_create_user_command("UgatermRename", function(opt)
+    terminal:rename(opt.args)
+  end, { nargs = "?" })
 end
 
 ---@param id integer|nil
@@ -184,12 +184,19 @@ function Terminal:delete()
 end
 
 ---Rename a current terminal buffer.
-function Terminal:rename()
+---@param newname string
+function Terminal:rename(newname)
   if not self:is_opened() then
     return
   end
   local buf_cache = self.buf_cache:get()
   if not (buf_cache and bufid_is_valid(buf_cache.id)) then
+    return
+  end
+
+  if newname ~= "" then
+    vim.api.nvim_buf_set_name(buf_cache.id, newname)
+    buf_cache.name = newname
     return
   end
 
@@ -199,11 +206,11 @@ function Terminal:rename()
       prompt = "Rename a terminal buffer: ",
       default = oldname,
     },
-    ---@param newname string|nil
-    function(newname)
-      if newname then
-        vim.api.nvim_buf_set_name(buf_cache.id, newname)
-        buf_cache.name = newname
+    ---@param input string|nil
+    function(input)
+      if input then
+        vim.api.nvim_buf_set_name(buf_cache.id, input)
+        buf_cache.name = input
       end
     end
   )

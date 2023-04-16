@@ -30,5 +30,6 @@ require("ugaterm").setup({
   - Delete a current terminal buffer.
   - If there are other terminals, open more recently used one.
   - If it is the last one, close the window too.
-- UgatermRename
+- UgatermRename [{newname}]
   - Rename a current terminal buffer.
+  - If {newname} is omitted, use vim.ui.input().
