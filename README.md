@@ -26,3 +26,5 @@ require("ugaterm").setup({
   - Toggle a terminal window.
 - UgatermSelect
   - Select a terminal using vim.ui.select().
+- UgatermRename
+  - Rename a current terminal buffer.
