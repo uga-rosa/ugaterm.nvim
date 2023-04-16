@@ -3,7 +3,7 @@ local lru = require("ugaterm.lru")
 ---@class Terminal
 ---@field prefix string Terminal buffer name prefix
 ---@field filetype string Terminal filetype
----@field open_cmd string
+---@field open_cmd string|function
 ---@field capacity integer
 ---@field buf_cache LruCache Keys are buffer names, values are buffer ids.
 ---@field winid integer|nil
@@ -75,7 +75,11 @@ function Terminal:_open()
   if self:is_opened() then
     return false
   end
-  vim.cmd(self.open_cmd)
+  if type(self.open_cmd) == "string" then
+    vim.cmd(self.open_cmd)
+  else
+    self.open_cmd()
+  end
   self.winid = vim.api.nvim_get_current_win()
   return true
 end
