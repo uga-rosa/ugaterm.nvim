@@ -112,6 +112,23 @@ function Terminal:new_open()
   vim.cmd.startinsert()
 end
 
+---Close a terminal window.
+function Terminal:close()
+  if winid_is_valid(self.winid) then
+    vim.api.nvim_win_hide(self.winid)
+  end
+  self.winid = nil
+end
+
+---Toggle a terminal window.
+function Terminal:toggle()
+  if winid_is_valid(self.winid) then
+    self:close()
+  else
+    self:open()
+  end
+end
+
 ---Select a terminal using vim.ui.select().
 function Terminal:select()
   if self.buf_cache:count() == 0 then
@@ -132,23 +149,6 @@ function Terminal:select()
     self:_open()
     vim.api.nvim_win_set_buf(self.winid, buf_cache.id)
   end)
-end
-
----Close a terminal window.
-function Terminal:close()
-  if winid_is_valid(self.winid) then
-    vim.api.nvim_win_hide(self.winid)
-  end
-  self.winid = nil
-end
-
----Toggle a terminal window.
-function Terminal:toggle()
-  if winid_is_valid(self.winid) then
-    self:close()
-  else
-    self:open()
-  end
 end
 
 return Terminal
