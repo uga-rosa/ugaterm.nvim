@@ -8,7 +8,7 @@ local CacheNode = {
 }
 
 ---@param key unknown
----@param value unknown? If nil, use self._dummy
+---@param value unknown|nil If nil, use self._dummy
 ---@return CacheNode
 function CacheNode.new(key, value)
   local self = setmetatable({}, { __index = CacheNode })
@@ -99,8 +99,9 @@ function LruCache:set(key, value)
 end
 
 ---If key is omitted, return the most recently used data.
----@param key unknown?
----@return unknown?
+---@param key unknown
+---@return unknown|nil value
+---@overload fun(self): unknown|nil
 function LruCache:get(key)
   if key ~= nil then
     local node = self.key2node[key]
@@ -109,8 +110,8 @@ function LruCache:get(key)
       return node.value
     end
   else
-    if vim.tbl_count(self.key2node) > 0 then
-      local node = self.linked_list.head.next
+    local node = self.linked_list.head.next
+    if node:is_valid() then
       return node.value
     end
   end
