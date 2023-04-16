@@ -165,13 +165,19 @@ function Terminal:rename()
   end
 
   local oldname = buf_cache.name
-  vim.ui.input({
-    prompt = "Rename a terminal buffer: ",
-    default = oldname,
-  }, function(newname)
-    vim.api.nvim_buf_set_name(buf_cache.id, newname)
-    buf_cache.name = newname
-  end)
+  vim.ui.input(
+    {
+      prompt = "Rename a terminal buffer: ",
+      default = oldname,
+    },
+    ---@param newname string|nil
+    function(newname)
+      if newname then
+        vim.api.nvim_buf_set_name(buf_cache.id, newname)
+        buf_cache.name = newname
+      end
+    end
+  )
 end
 
 return Terminal
