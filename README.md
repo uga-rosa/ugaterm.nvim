@@ -6,17 +6,32 @@ A terminal plugin for Neovim.
 
 ```lua
 require("ugaterm").setup({
+  ---@type string The terminal buffer name prefix.
   prefix = "ugaterm",
+  ---@type string The filetype for a terminal buffer.
   filetype = "ugaterm",
+  ---@type string|function Command|function to open a teminal window.
   open_cmd = "botright 15sp",
-  capacity = 10,
+  -- Example of opening in a floating window.
+  --
+  -- open_cmd = function()
+  --   local height = vim.api.nvim_get_option("lines")
+  --   local width = vim.api.nvim_get_option("columns")
+  --   vim.api.nvim_open_win(0, true, {
+  --     relative = "editor",
+  --     row = math.floor(height * 0.1),
+  --     col = math.floor(width * 0.1),
+  --     height = math.floor(height * 0.8),
+  --     width = math.floor(width * 0.8),
+  --   })
+  -- end,
 })
 ```
 
 # Commands
 
 - UgatermOpen
-  - Open most recently used terminal.
+  - Open the most recently used terminal.
   - If the terminal has never been opened, UgatermNew is called.
 - UgatermNew
   - Open a new terminal.
