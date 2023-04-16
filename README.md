@@ -6,7 +6,8 @@ A terminal plugin for Neovim.
 
 ```lua
 require("ugaterm").setup({
-  prefix = "terminal",
+  prefix = "ugaterm",
+  filetype = "ugaterm",
   open_cmd = "botright 15sp",
   capacity = 10,
 })
