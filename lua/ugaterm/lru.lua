@@ -63,12 +63,12 @@ function LinkedList:move2head(node)
 end
 
 ---@class LruCache
----@field capacity integer
+---@field capacity integer|nil
 ---@field key2node table<unknown, CacheNode>
 ---@field linked_list LinkedList
 local LruCache = {}
 
----@param capacity integer
+---@param capacity integer|nil
 ---@return LruCache
 function LruCache.new(capacity)
   local self = setmetatable({}, { __index = LruCache })
@@ -90,7 +90,7 @@ function LruCache:set(key, value)
     self.key2node[key] = new_node
     self.linked_list:add(new_node)
 
-    if vim.tbl_count(self.key2node) > self.capacity then
+    if self.capacity and vim.tbl_count(self.key2node) > self.capacity then
       local final_node = self.linked_list.tail.prev
       self.key2node[final_node.key] = nil
       self.linked_list:remove(final_node)

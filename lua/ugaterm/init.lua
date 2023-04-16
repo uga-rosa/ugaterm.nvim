@@ -4,20 +4,18 @@ local lru = require("ugaterm.lru")
 ---@field prefix string Terminal buffer name prefix
 ---@field filetype string Terminal filetype
 ---@field open_cmd string|function
----@field capacity integer
 ---@field buf_cache LruCache Keys are buffer names, values are buffer ids.
 ---@field winid integer|nil
 local Terminal = {
   prefix = "ugaterm",
   filetype = "ugaterm",
   open_cmd = "botright 15sp",
-  capacity = 10,
 }
 
 ---@return Terminal
 function Terminal.new()
   return setmetatable({
-    buf_cache = lru.new(Terminal.capacity),
+    buf_cache = lru.new(),
   }, { __index = Terminal })
 end
 
