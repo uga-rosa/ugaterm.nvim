@@ -1,15 +1,11 @@
 local lru = require("ugaterm.lru")
 
----@class buf_cache
----@field name string
----@field id integer
-
 ---@class Terminal
 ---@field prefix string Terminal buffer name prefix
 ---@field filetype string Terminal filetype
 ---@field open_cmd string
 ---@field capacity integer
----@field buf_cache LruCache Keys are buffer names, values are buf_cache
+---@field buf_cache LruCache Keys are buffer names, values are buffer ids.
 ---@field winid integer|nil
 local Terminal = {
   prefix = "ugaterm",
@@ -91,11 +87,10 @@ function Terminal:open()
     return
   end
 
-  ---@type buf_cache|nil
-  local buf_cache = self.buf_cache:get()
-  if buf_cache and bufid_is_valid(buf_cache.id) then
+  local bufid = self.buf_cache:get()
+  if bufid_is_valid(bufid) then
     -- Open most recently used terminal
-    vim.api.nvim_win_set_buf(self.winid, buf_cache.id)
+    vim.api.nvim_win_set_buf(self.winid, bufid)
     vim.cmd.startinsert()
   else
     -- Open new terminal
@@ -110,10 +105,9 @@ function Terminal:new_open()
   vim.cmd.terminal()
 
   -- Create a cache
-  local bufid = vim.api.nvim_get_current_buf()
   local bufname = self.prefix .. (self.buf_cache:count() + 1)
-  local buf_cache = { name = bufname, id = bufid }
-  self.buf_cache:set(bufname, buf_cache)
+  local bufid = vim.api.nvim_get_current_buf()
+  self.buf_cache:set(bufname, bufid)
 
   -- Set buffer name and options
   vim.api.nvim_buf_set_name(bufid, bufname)
@@ -148,16 +142,15 @@ function Terminal:select()
   local bufnames = {}
   local node = self.buf_cache.linked_list.head.next
   while node:is_valid() do
-    table.insert(bufnames, node.value.name)
+    table.insert(bufnames, node.key)
     node = node.next
   end
   vim.ui.select(bufnames, {
     prompt = "Select terminals: ",
   }, function(choice)
-    local buf_cache = self.buf_cache:get(choice)
-    ---@cast buf_cache buf_cache
+    local bufid = self.buf_cache:get(choice)
     self:_open()
-    vim.api.nvim_win_set_buf(self.winid, buf_cache.id)
+    vim.api.nvim_win_set_buf(self.winid, bufid)
   end)
 end
 
@@ -189,28 +182,26 @@ function Terminal:rename(newname)
   if not self:is_opened() then
     return
   end
-  local buf_cache = self.buf_cache:get()
-  if not (buf_cache and bufid_is_valid(buf_cache.id)) then
+  local bufid = self.buf_cache:shift()
+  if not bufid_is_valid(bufid) then
     return
   end
 
   if newname ~= "" then
-    vim.api.nvim_buf_set_name(buf_cache.id, newname)
-    buf_cache.name = newname
+    vim.api.nvim_buf_set_name(bufid, newname)
+    self.buf_cache:set(newname, bufid)
     return
   end
 
-  local oldname = buf_cache.name
   vim.ui.input(
     {
       prompt = "Rename a terminal buffer: ",
-      default = oldname,
     },
     ---@param input string|nil
     function(input)
       if input then
-        vim.api.nvim_buf_set_name(buf_cache.id, input)
-        buf_cache.name = input
+        vim.api.nvim_buf_set_name(bufid, input)
+        self.buf_cache:set(input, bufid)
       end
     end
   )
