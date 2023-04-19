@@ -9,10 +9,10 @@ A terminal plugin for Neovim.
 ```lua
 require("ugaterm").setup({
   ---@type string The terminal buffer name prefix.
-  prefix = "ugaterm",
+  prefix = "terminal",
   ---@type string The filetype for a terminal buffer.
   filetype = "ugaterm",
-  ---@type string|function Command|function to open a teminal window.
+  ---@type string|function The command/function to open a teminal window.
   open_cmd = "botright 15sp",
   -- Example of opening in a floating window.
   --
