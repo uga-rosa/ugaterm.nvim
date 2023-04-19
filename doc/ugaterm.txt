@@ -7,6 +7,7 @@ INTRODUCTION						|ugaterm-introduction|
 SETUP							|ugaterm-setup|
 COMAMNDS						|ugaterm-commands|
 
+
 ==============================================================================
 INTRODUCTION						*ugaterm-introduction*
 
