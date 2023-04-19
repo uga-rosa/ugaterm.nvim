@@ -17,6 +17,12 @@ function CacheNode.new(key, value)
   return self
 end
 
+---Remove node from LinkedList
+function CacheNode:remove()
+  self.prev.next = self.next
+  self.next.prev = self.prev
+end
+
 ---Return false if node is dummy, otherwise true.
 ---@return boolean
 function CacheNode:is_valid()
@@ -47,14 +53,8 @@ function LinkedList:add(node)
 end
 
 ---@param node CacheNode
-function LinkedList:remove(node)
-  node.prev.next = node.next
-  node.next.prev = node.prev
-end
-
----@param node CacheNode
 function LinkedList:move2head(node)
-  self:remove(node)
+  node:remove()
   self:add(node)
 end
 
@@ -89,7 +89,7 @@ function LruCache:set(key, value)
     if self.capacity and vim.tbl_count(self.key2node) > self.capacity then
       local final_node = self.linked_list.tail.prev
       self.key2node[final_node.key] = nil
-      self.linked_list:remove(final_node)
+      final_node:remove()
     end
   end
 end
@@ -119,7 +119,7 @@ function LruCache:shift()
   local node = self.linked_list.head.next
   if node:is_valid() then
     self.key2node[node.key] = nil
-    self.linked_list:remove(node)
+    node:remove()
     return node.value
   end
 end
