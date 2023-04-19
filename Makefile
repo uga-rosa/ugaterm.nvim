@@ -3,10 +3,10 @@
 integration: lint test
 
 lint:
-	luacheck .
+	luacheck lua plugin
 
 test:
-	vusted .
+	vusted lua plugin
 
 format:
-	stylua .
+	stylua lua plugin
