@@ -1,12 +1,12 @@
-.PHONY: test vusted lint format
+.PHONY: integration lint test format
 
-test: vusted lint
-
-vusted:
-	vusted .
+integration: lint test
 
 lint:
 	luacheck .
+
+test:
+	vusted .
 
 format:
 	stylua .
