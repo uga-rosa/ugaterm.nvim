@@ -1,0 +1,88 @@
+*ugaterm.txt* *ugaterm*
+
+==============================================================================
+CONTENTS						*ugaterm-contents*
+
+INTRODUCTION						|ugaterm-introduction|
+SETUP							|ugaterm-setup|
+COMAMNDS						|ugaterm-commands|
+
+==============================================================================
+INTRODUCTION						*ugaterm-introduction*
+
+A terminal plugin for Neovim.
+This plugin provides a set of commands for comfortable use of the interactive
+shell (|:terminal| without {cmd}).
+
+Requirements
+	It may work even if neovim is old, but only the latest stable is
+	guaranteed to work.
+
+
+==============================================================================
+SETUP							*ugaterm-setup*
+
+There is NO need to call `setup()` if you don't change the default settings.
+
+>lua
+	require("ugaterm").setup({
+	  ---@type string The terminal buffer name prefix.
+	  prefix = "terminal",
+	  ---@type string The filetype for a terminal buffer.
+	  filetype = "ugaterm",
+	  ---@type string|function The command/function to open a teminal window.
+	  open_cmd = "botright 15sp",
+	  -- Example of opening in a floating window.
+	  --
+	  -- open_cmd = function()
+	  --   local height = vim.api.nvim_get_option("lines")
+	  --   local width = vim.api.nvim_get_option("columns")
+	  --   vim.api.nvim_open_win(0, true, {
+	  --     relative = "editor",
+	  --     row = math.floor(height * 0.1),
+	  --     col = math.floor(width * 0.1),
+	  --     height = math.floor(height * 0.8),
+	  --     width = math.floor(width * 0.8),
+	  --   })
+	  -- end,
+	})
+<
+
+==============================================================================
+COMMANDS						*ugaterm-commands*
+
+								*:UgatermOpen*
+:UgatermOpen
+	Open the most recently used terminal.
+	If the terminal has never been opened, UgatermNew is called.
+
+								*:UgatermNew*
+:UgatermNew
+	Open a new terminal.
+
+								*:UgatermHide*
+:UgatermHide
+	Hide a terminal window.
+
+								*:UgatermToggle*
+:UgatermToggle
+	Toggle a terminal window (open/hide).
+
+								*:UgatermSelect*
+:UgatermSelect
+	Select a terminal using |vim.ui.select()|.
+
+								*:UgatermDelete*
+:UgatermDelete
+	Delete a current terminal buffer.
+	If there are other terminals, open more recently used one.
+	If it is the last one, close the window too.
+
+								*:UgatermRename*
+:UgatermRename [{newname}]
+	Rename a current terminal buffer.
+	If {newname} is omitted, use |vim.ui.input()|.
+
+
+
+vim:tw=78:ts=8:noet:ft=help:norl:
