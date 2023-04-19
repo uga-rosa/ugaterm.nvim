@@ -11,7 +11,7 @@ local lru = require("ugaterm.lru")
 ---@field winid integer|nil
 local Terminal = {
   options = {
-    prefix = "terminal",
+    prefix = "terminal://",
     filetype = "ugaterm",
     open_cmd = "botright 15sp",
   },

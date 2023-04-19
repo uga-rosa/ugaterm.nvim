@@ -28,7 +28,7 @@ There is NO need to call `setup()` if you don't change the default settings.
 >lua
 	require("ugaterm").setup({
 	  ---@type string The terminal buffer name prefix.
-	  prefix = "terminal",
+	  prefix = "terminal://",
 	  ---@type string The filetype for a terminal buffer.
 	  filetype = "ugaterm",
 	  ---@type string|function The command/function to open a teminal window.
