@@ -178,6 +178,7 @@ function Terminal:rename(newname)
   vim.ui.input(
     {
       prompt = "Rename a terminal buffer: ",
+      default = vim.api.nvim_buf_get_name(bufid),
     },
     ---@param input string|nil
     function(input)
