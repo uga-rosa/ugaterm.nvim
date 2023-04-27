@@ -5,6 +5,11 @@ local function num_win()
 end
 
 describe("Test for terminal", function()
+  before_each(function()
+    vim.cmd("silent %bwipeout!")
+    terminal = require("ugaterm.terminal").new()
+  end)
+
   it("open/hide", function()
     assert.equals(1, num_win())
     terminal:open()
@@ -31,6 +36,8 @@ describe("Test for terminal", function()
 
   it("delete", function()
     terminal:open()
+    assert.equals("terminal://1", vim.api.nvim_buf_get_name(0))
+    terminal:new_open()
     assert.equals("terminal://2", vim.api.nvim_buf_get_name(0))
     terminal:delete()
     assert.equals("terminal://1", vim.api.nvim_buf_get_name(0))
