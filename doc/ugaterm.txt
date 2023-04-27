@@ -87,7 +87,7 @@ COMMANDS						*ugaterm-commands*
 								*:UgatermRename*
 :UgatermRename [{newname}]
 	Rename a current terminal buffer.
-	If {newname} is omitted, use |vim.ui.input()|.
+	If {newname} is omitted, then |vim.ui.input()| is called.
 
 
 
