@@ -80,6 +80,12 @@ function Terminal:open()
   end
 end
 
+---@param bufname string
+---@return boolean
+local function bufexists(bufname)
+  return vim.fn.bufexists(bufname) == 1
+end
+
 ---Open a new terminal.
 function Terminal:new_open()
   self:_open()
@@ -169,25 +175,26 @@ function Terminal:rename(newname)
     return
   end
 
-  if newname ~= "" then
-    vim.api.nvim_buf_set_name(bufid, newname)
-    self.buf_cache:set(newname, bufid)
-    return
+  ---@param bufname? string
+  local function cleanup(bufname)
+    if bufname == nil or bufname == "" then
+      return
+    elseif bufexists(bufname) then
+      vim.notify(("buffer '%s' is already exists"):format(bufname))
+      return
+    end
+    vim.api.nvim_buf_set_name(bufid, bufname)
+    self.buf_cache:set(bufname, bufid)
   end
 
-  vim.ui.input(
-    {
+  if newname ~= "" then
+    cleanup(newname)
+  else
+    vim.ui.input({
       prompt = "Rename a terminal buffer: ",
       default = vim.api.nvim_buf_get_name(bufid),
-    },
-    ---@param input string|nil
-    function(input)
-      if input then
-        vim.api.nvim_buf_set_name(bufid, input)
-        self.buf_cache:set(input, bufid)
-      end
-    end
-  )
+    }, cleanup)
+  end
 end
 
 return Terminal
