@@ -87,22 +87,44 @@ local function bufexists(bufname)
 end
 
 ---Open a new terminal.
-function Terminal:new_open()
-  self:_open()
+---If {name} is given, it should be used as the buffer name.
+---If {name} is an empty string, vim.ui.input() is called.
+---@param name? string
+function Terminal:new_open(name)
+  ---@param bufname? string
+  local function cleanup(bufname)
+    if bufname == nil or bufname == "" then
+      return
+    elseif bufexists(bufname) then
+      vim.notify(("buffer '%s' is already exists"):format(bufname))
+      return
+    end
 
-  vim.cmd.terminal()
+    self:_open()
+    vim.cmd.terminal()
 
-  -- Create a cache
+    -- Create a cache
+    local bufid = vim.api.nvim_get_current_buf()
+    self.buf_cache:set(bufname, bufid)
+
+    -- Set buffer name and options
+    vim.api.nvim_buf_set_name(bufid, bufname)
+    vim.api.nvim_buf_set_option(bufid, "buflisted", false)
+    vim.api.nvim_buf_set_option(bufid, "filetype", self.options.filetype)
+
+    vim.cmd.startinsert()
+  end
+
+  -- Determine the buffer name
   local bufname = self.options.prefix .. (self.buf_cache:count() + 1)
-  local bufid = vim.api.nvim_get_current_buf()
-  self.buf_cache:set(bufname, bufid)
-
-  -- Set buffer name and options
-  vim.api.nvim_buf_set_name(bufid, bufname)
-  vim.api.nvim_buf_set_option(bufid, "buflisted", false)
-  vim.api.nvim_buf_set_option(bufid, "filetype", self.options.filetype)
-
-  vim.cmd.startinsert()
+  if name == nil or name ~= "" then
+    cleanup(name or bufname)
+  else
+    vim.ui.input({
+      prompt = "Input the buffer name: ",
+      default = bufname,
+    }, cleanup)
+  end
 end
 
 ---Hide a terminal window.

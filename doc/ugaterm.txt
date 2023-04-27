@@ -61,6 +61,11 @@ COMMANDS						*ugaterm-commands*
 :UgatermNew
 	Open a new terminal.
 
+							*:UgatermNewWithName*
+:UgatermNewWithName [{name}]
+	Open a new terminal with the buffer name {name}.
+	If {name} is omitted, then |vim.ui.input()| is called.
+
 								*:UgatermHide*
 :UgatermHide
 	Hide a terminal window.
