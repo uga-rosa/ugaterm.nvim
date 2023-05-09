@@ -8,7 +8,7 @@ local lru = require("ugaterm.lru")
 ---@class Terminal
 ---@field options TerminalOptions
 ---@field buf_cache LruCache Keys are buffer names, values are buffer ids.
----@field winid integer|nil
+---@field term_winid integer|nil ID of the terminal window.
 local Terminal = {
   options = {
     prefix = "terminal://",
@@ -38,10 +38,10 @@ end
 ---Return true if the terminal window is opened, else false.
 ---@return boolean
 function Terminal:is_opened()
-  if self.winid and vim.api.nvim_win_is_valid(self.winid) then
+  if self.term_winid and vim.api.nvim_win_is_valid(self.term_winid) then
     return true
   else
-    self.winid = nil
+    self.term_winid = nil
     return false
   end
 end
@@ -58,7 +58,7 @@ function Terminal:_open()
   else
     open_cmd()
   end
-  self.winid = vim.api.nvim_get_current_win()
+  self.term_winid = vim.api.nvim_get_current_win()
   return true
 end
 
@@ -72,7 +72,7 @@ function Terminal:open()
   local bufid = self.buf_cache:get()
   if bufid_is_valid(bufid) then
     -- Open most recently used terminal
-    vim.api.nvim_win_set_buf(self.winid, bufid)
+    vim.api.nvim_win_set_buf(self.term_winid, bufid)
     vim.cmd.startinsert()
   else
     -- Open new terminal
@@ -130,7 +130,7 @@ end
 ---Hide a terminal window.
 function Terminal:hide()
   if self:is_opened() then
-    vim.api.nvim_win_hide(self.winid)
+    vim.api.nvim_win_hide(self.term_winid)
   end
 end
 
@@ -160,7 +160,7 @@ function Terminal:select()
   }, function(choice)
     local bufid = self.buf_cache:get(choice)
     self:_open()
-    vim.api.nvim_win_set_buf(self.winid, bufid)
+    vim.api.nvim_win_set_buf(self.term_winid, bufid)
   end)
 end
 
@@ -179,7 +179,7 @@ function Terminal:delete()
   end
   -- The terminal window close too.
   vim.api.nvim_buf_delete(bufid, { force = true })
-  self.winid = nil
+  self.term_winid = nil
 
   if self.buf_cache:count() > 0 then
     self:open()
