@@ -9,6 +9,7 @@ local lru = require("ugaterm.lru")
 ---@field options TerminalOptions
 ---@field buf_cache LruCache Keys are buffer names, values are buffer ids.
 ---@field term_winid integer|nil ID of the terminal window.
+---@field prev_winid integer|nil ID of the original window where the terminal window was opened.
 local Terminal = {
   options = {
     prefix = "terminal://",
@@ -52,6 +53,7 @@ function Terminal:_open()
   if self:is_opened() then
     return false
   end
+  self.prev_winid = vim.api.nvim_get_current_win()
   local open_cmd = self.options.open_cmd
   if type(open_cmd) == "string" then
     vim.cmd(open_cmd)
@@ -130,7 +132,12 @@ end
 ---Hide a terminal window.
 function Terminal:hide()
   if self:is_opened() then
+    local in_term = vim.api.nvim_get_current_win() == self.term_winid
     vim.api.nvim_win_hide(self.term_winid)
+    self.term_winid = nil
+    if in_term then
+      vim.fn.win_gotoid(self.prev_winid)
+    end
   end
 end
 
@@ -172,14 +179,18 @@ function Terminal:delete()
     return
   end
 
-  -- Delete a current terminal buffer
   local bufid = self.buf_cache:shift()
   if not bufid_is_valid(bufid) then
     return
   end
+
+  local in_term = vim.api.nvim_get_current_win() == self.term_winid
   -- The terminal window close too.
   vim.api.nvim_buf_delete(bufid, { force = true })
   self.term_winid = nil
+  if in_term then
+    vim.fn.win_gotoid(self.prev_winid)
+  end
 
   if self.buf_cache:count() > 0 then
     self:open()
