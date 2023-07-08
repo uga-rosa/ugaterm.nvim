@@ -65,7 +65,7 @@ function Terminal:open(cmd)
   if buf_cache then
     -- Open most recently used terminal
     vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
-    if cmd then
+    if cmd and cmd ~= "" then
       self:send(cmd)
     end
   else
@@ -94,7 +94,7 @@ function Terminal:new_open(cmd)
   local bufnr = vim.api.nvim_create_buf(false, false)
   vim.api.nvim_win_set_buf(self.term_winid, bufnr)
   local chan_id = vim.fn.termopen(vim.opt.shell:get(), vim.empty_dict())
-  if cmd then
+  if cmd and cmd ~= "" then
     vim.fn.chansend(chan_id, { cmd, "" })
   end
 
