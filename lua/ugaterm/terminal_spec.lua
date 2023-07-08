@@ -1,8 +1,9 @@
-local terminal = require("ugaterm.terminal").new()
-
 local function num_win()
   return vim.fn.winnr("$")
 end
+
+---@type Terminal
+local terminal
 
 describe("Test for terminal", function()
   before_each(function()
@@ -31,14 +32,6 @@ describe("Test for terminal", function()
     assert.equals("terminal://1", vim.api.nvim_buf_get_name(0))
     terminal:new_open()
     assert.equals("terminal://2", vim.api.nvim_buf_get_name(0))
-    terminal:hide()
-  end)
-
-  it("new_open with name", function()
-    terminal:open()
-    assert.equals("terminal://1", vim.api.nvim_buf_get_name(0))
-    terminal:new_open("terminal://foo")
-    assert.equals("terminal://foo", vim.api.nvim_buf_get_name(0))
     terminal:hide()
   end)
 
