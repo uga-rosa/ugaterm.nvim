@@ -68,7 +68,6 @@ function Terminal:open(cmd)
     if cmd then
       self:send(buf_cache.bufname, cmd)
     end
-    vim.cmd.startinsert()
   else
     -- Open new terminal
     self:new_open(cmd)
@@ -106,8 +105,6 @@ function Terminal:new_open(cmd)
   vim.api.nvim_buf_set_name(bufnr, bufname)
   vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
   vim.api.nvim_set_option_value("filetype", config.get("filetype"), { buf = bufnr })
-
-  vim.cmd.startinsert()
 end
 
 ---@param bufname string
