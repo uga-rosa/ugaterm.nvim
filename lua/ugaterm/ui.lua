@@ -127,13 +127,14 @@ end
 
 ---Hide a terminal window.
 function UI:hide()
-  if self:is_opened() then
-    local in_term = vim.api.nvim_get_current_win() == self.term_winid
-    vim.api.nvim_win_hide(self.term_winid)
-    self.term_winid = nil
-    if in_term then
-      vim.fn.win_gotoid(self.prev_winid)
-    end
+  if not self:is_opened() then
+    return
+  end
+  local in_term = vim.api.nvim_get_current_win() == self.term_winid
+  vim.api.nvim_win_hide(self.term_winid)
+  self.term_winid = nil
+  if in_term then
+    vim.fn.win_gotoid(self.prev_winid)
   end
 end
 
