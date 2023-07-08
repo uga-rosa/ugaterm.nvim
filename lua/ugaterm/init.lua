@@ -6,14 +6,17 @@ local M = {}
 M.setup = config.set
 
 function M.create_commands()
-  vim.api.nvim_create_user_command("UgatermOpen", function()
-    terminal:open()
-  end, {})
-  vim.api.nvim_create_user_command("UgatermNew", function()
-    terminal:new_open()
-  end, {})
+  vim.api.nvim_create_user_command("UgatermOpen", function(opt)
+    terminal:open(opt.args)
+  end, { nargs = "?" })
+  vim.api.nvim_create_user_command("UgatermNew", function(opt)
+    terminal:new_open(opt.args)
+  end, { nargs = "?" })
   vim.api.nvim_create_user_command("UgatermSend", function(opt)
-    terminal:send(opt.fargs[1], table.concat(opt.fargs, " ", 2))
+    terminal:send(opt.args)
+  end, { nargs = 1 })
+  vim.api.nvim_create_user_command("UgatermSendTo", function(opt)
+    terminal:send_to(opt.fargs[1], table.concat(opt.fargs, " ", 2))
   end, {
     nargs = "+",
     ---@param cmdline string

@@ -53,18 +53,21 @@ There is NO need to call `setup()` if you don't change the default settings.
 COMMANDS						*ugaterm-commands*
 
 								*:UgatermOpen*
-:UgatermOpen
+:UgatermOpen [{cmd}]
 	Open the most recently used terminal.
-	If the terminal has never been opened, UgatermNew is called.
+	If the terminal has never been opened, |:UgatermNew| is called.
 
 								*:UgatermNew*
-:UgatermNew
+:UgatermNew [{cmd}]
 	Open a new terminal.
 
-							*:UgatermNewWithName*
-:UgatermNewWithName [{name}]
-	Open a new terminal with the buffer name {name}.
-	If {name} is omitted, then |vim.ui.input()| is called.
+								*:UgatermSend*
+:UgatermSend {cmd}
+	Send {cmd} to the most recently used terminal.
+
+								*:UgatermSendTo*
+:UgatermSendTo {bufname} {cmd}
+	Send {cmd} to the {bufname} terminal.
 
 								*:UgatermHide*
 :UgatermHide
