@@ -113,14 +113,12 @@ function LruCache:get(key)
   end
 end
 
----Remove the most recently used data and return it.
----@return unknown|nil value
-function LruCache:shift()
-  local node = self.linked_list.head.next
-  if node:is_valid() then
+---@param key unknown
+function LruCache:remove(key)
+  local node = self.key2node[key]
+  if node then
     self.key2node[node.key] = nil
     node:remove()
-    return node.value
   end
 end
 
