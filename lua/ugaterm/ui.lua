@@ -1,17 +1,17 @@
 local lru = require("ugaterm.lru")
 local config = require("ugaterm.config")
 
----@class Terminal
+---@class UI
 ---@field buf_cache LruCache Keys are buffer names, values are buffer ids.
 ---@field term_winid integer|nil ID of the terminal window.
 ---@field prev_winid integer|nil ID of the original window where the terminal window was opened.
-local Terminal = {}
+local UI = {}
 
----@return Terminal
-function Terminal.new()
+---@return UI
+function UI.new()
   return setmetatable({
     buf_cache = lru.new(),
-  }, { __index = Terminal })
+  }, { __index = UI })
 end
 
 ---@param id integer|nil
@@ -22,7 +22,7 @@ end
 
 ---Return true if the terminal window is opened, else false.
 ---@return boolean
-function Terminal:is_opened()
+function UI:is_opened()
   if self.term_winid and vim.api.nvim_win_is_valid(self.term_winid) then
     return true
   else
@@ -33,7 +33,7 @@ end
 
 ---Open a terminal window.
 ---@return boolean success true if it can be opened, else false
-function Terminal:_open()
+function UI:_open()
   if self:is_opened() then
     return false
   end
@@ -50,7 +50,7 @@ end
 
 ---Open a most recently used terminal or new one.
 ---If it's already open, exit immediately.
-function Terminal:open()
+function UI:open()
   if not self:_open() then
     return
   end
@@ -76,7 +76,7 @@ end
 ---If {name} is given, it should be used as the buffer name.
 ---If {name} is an empty string, vim.ui.input() is called.
 ---@param name? string
-function Terminal:new_open(name)
+function UI:new_open(name)
   ---@param bufname? string
   local function cleanup(bufname)
     if bufname == nil or bufname == "" then
@@ -114,7 +114,7 @@ function Terminal:new_open(name)
 end
 
 ---Hide a terminal window.
-function Terminal:hide()
+function UI:hide()
   if self:is_opened() then
     local in_term = vim.api.nvim_get_current_win() == self.term_winid
     vim.api.nvim_win_hide(self.term_winid)
@@ -126,7 +126,7 @@ function Terminal:hide()
 end
 
 ---Toggle a terminal window.
-function Terminal:toggle()
+function UI:toggle()
   if self:is_opened() then
     self:hide()
   else
@@ -135,7 +135,7 @@ function Terminal:toggle()
 end
 
 ---Select a terminal using vim.ui.select().
-function Terminal:select()
+function UI:select()
   if self.buf_cache:count() == 0 then
     vim.notify("No terminals", vim.log.levels.WARN)
     return
@@ -158,7 +158,7 @@ end
 ---Delete a current terminal buffer.
 ---If there are other terminals, open more recently used one.
 ---If this is the last one, close the window too.
-function Terminal:delete()
+function UI:delete()
   if not self:is_opened() then
     return
   end
@@ -183,7 +183,7 @@ end
 
 ---Rename a current terminal buffer.
 ---@param newname string
-function Terminal:rename(newname)
+function UI:rename(newname)
   if not self:is_opened() then
     return
   end
@@ -214,4 +214,4 @@ function Terminal:rename(newname)
   end
 end
 
-return Terminal
+return UI

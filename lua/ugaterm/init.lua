@@ -1,5 +1,5 @@
 local config = require("ugaterm.config")
-local terminal = require("ugaterm.terminal").new()
+local ui = require("ugaterm.ui").new()
 
 local M = {}
 
@@ -7,28 +7,28 @@ M.setup = config.set
 
 function M.create_commands()
   vim.api.nvim_create_user_command("UgatermOpen", function()
-    terminal:open()
+    ui:open()
   end, {})
   vim.api.nvim_create_user_command("UgatermNew", function()
-    terminal:new_open()
+    ui:new_open()
   end, {})
   vim.api.nvim_create_user_command("UgatermNewWithName", function(opt)
-    terminal:new_open(opt.args)
+    ui:new_open(opt.args)
   end, { nargs = "?" })
   vim.api.nvim_create_user_command("UgatermHide", function()
-    terminal:hide()
+    ui:hide()
   end, {})
   vim.api.nvim_create_user_command("UgatermToggle", function()
-    terminal:toggle()
+    ui:toggle()
   end, {})
   vim.api.nvim_create_user_command("UgatermDelete", function()
-    terminal:delete()
+    ui:delete()
   end, {})
   vim.api.nvim_create_user_command("UgatermSelect", function()
-    terminal:select()
+    ui:select()
   end, {})
   vim.api.nvim_create_user_command("UgatermRename", function(opt)
-    terminal:rename(opt.args)
+    ui:rename(opt.args)
   end, { nargs = "?" })
 end
 
