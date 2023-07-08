@@ -4,7 +4,7 @@ local config = require("ugaterm.config")
 ---@class UI
 ---@field buf_cache LruCache Keys are buffer names, values are buffer ids.
 ---@field term_winid integer|nil ID of the terminal window.
----@field prev_winid integer|nil ID of the original window where the terminal window was opened.
+---@field prev_winid integer|nil ID of the window when the terminal window was opened.
 local UI = {}
 
 ---@return UI
@@ -82,7 +82,7 @@ function UI:new_open(name)
     if bufname == nil or bufname == "" then
       return
     elseif bufexists(bufname) then
-      vim.notify(("buffer '%s' is already exists"):format(bufname))
+      vim.notify(("buffer '%s' is already exists"):format(bufname), vim.log.levels.ERROR)
       return
     end
 
@@ -197,7 +197,7 @@ function UI:rename(newname)
     if bufname == nil or bufname == "" then
       return
     elseif bufexists(bufname) then
-      vim.notify(("buffer '%s' is already exists"):format(bufname))
+      vim.notify(("buffer '%s' is already exists"):format(bufname), vim.log.levels.ERROR)
       return
     end
     vim.api.nvim_buf_set_name(bufid, bufname)
