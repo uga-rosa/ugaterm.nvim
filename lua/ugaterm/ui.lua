@@ -150,22 +150,30 @@ end
 ---Select a terminal using vim.ui.select().
 function UI:select()
   if self.buf_cache:count() == 0 then
-    vim.notify("No terminals", vim.log.levels.WARN)
+    vim.notify("No terminals", vim.log.levels.INFO)
     return
   end
-  local bufnames = {}
-  local node = self.buf_cache.linked_list.head.next
-  while node:is_valid() do
-    table.insert(bufnames, node.key)
-    node = node.next
+  ---@type BufCache[]
+  local buf_caches = {}
+  for buf_cache in self.buf_cache:iter() do
+    table.insert(buf_caches, buf_cache)
   end
-  vim.ui.select(bufnames, {
-    prompt = "Select terminals: ",
-  }, function(choice)
-    local bufid = self.buf_cache:get(choice)
-    self:_open()
-    vim.api.nvim_win_set_buf(self.term_winid, bufid)
-  end)
+  vim.ui.select(
+    buf_caches,
+    {
+      prompt = "Select terminals: ",
+      ---@param buf_cache BufCache
+      ---@return string
+      format_item = function(buf_cache)
+        return buf_cache.bufname
+      end,
+    },
+    ---@param buf_cache BufCache
+    function(buf_cache)
+      self:_open()
+      vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
+    end
+  )
 end
 
 ---Delete a current terminal buffer.

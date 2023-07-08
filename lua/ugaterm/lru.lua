@@ -127,4 +127,15 @@ function LruCache:count()
   return vim.tbl_count(self.key2node)
 end
 
+---@return fun(): unknown|nil
+function LruCache:iter()
+  local node = self.linked_list.head
+  return function()
+    node = node.next
+    if node:is_valid() then
+      return node.value
+    end
+  end
+end
+
 return LruCache
