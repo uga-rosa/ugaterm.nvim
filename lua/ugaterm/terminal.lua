@@ -1,33 +1,17 @@
 local lru = require("ugaterm.lru")
-
----@class TerminalOptions
----@field prefix string Terminal buffer name prefix
----@field filetype string Terminal filetype
----@field open_cmd string|function The command/function to open a teminal window.
+local config = require("ugaterm.config")
 
 ---@class Terminal
----@field options TerminalOptions
 ---@field buf_cache LruCache Keys are buffer names, values are buffer ids.
 ---@field term_winid integer|nil ID of the terminal window.
 ---@field prev_winid integer|nil ID of the original window where the terminal window was opened.
-local Terminal = {
-  options = {
-    prefix = "terminal://",
-    filetype = "ugaterm",
-    open_cmd = "botright 15sp",
-  },
-}
+local Terminal = {}
 
 ---@return Terminal
 function Terminal.new()
   return setmetatable({
     buf_cache = lru.new(),
   }, { __index = Terminal })
-end
-
----@param opts TerminalOptions
-function Terminal:option_set(opts)
-  self.options = vim.tbl_extend("force", self.options, opts)
 end
 
 ---@param id integer|nil
@@ -54,7 +38,7 @@ function Terminal:_open()
     return false
   end
   self.prev_winid = vim.api.nvim_get_current_win()
-  local open_cmd = self.options.open_cmd
+  local open_cmd = config.get("open_cmd")
   if type(open_cmd) == "string" then
     vim.cmd(open_cmd)
   else
@@ -112,13 +96,13 @@ function Terminal:new_open(name)
     -- Set buffer name and options
     vim.api.nvim_buf_set_name(bufid, bufname)
     vim.api.nvim_buf_set_option(bufid, "buflisted", false)
-    vim.api.nvim_buf_set_option(bufid, "filetype", self.options.filetype)
+    vim.api.nvim_buf_set_option(bufid, "filetype", config.get("filetype"))
 
     vim.cmd.startinsert()
   end
 
   -- Determine the buffer name
-  local bufname = self.options.prefix .. (self.buf_cache:count() + 1)
+  local bufname = config.get("prefix") .. (self.buf_cache:count() + 1)
   if name == nil or name ~= "" then
     cleanup(name or bufname)
   else

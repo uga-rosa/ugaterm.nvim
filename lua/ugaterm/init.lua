@@ -1,18 +1,9 @@
+local config = require("ugaterm.config")
 local terminal = require("ugaterm.terminal").new()
 
 local M = {}
 
----@param opts TerminalOptions|nil
-function M.setup(opts)
-  opts = opts or {}
-  vim.validate({
-    opts = { opts, "t" },
-    prefix = { opts.prefix, "s", true },
-    filetype = { opts.prefix, "s", true },
-    open_cmd = { opts.open_cmd, { "s", "c" }, true },
-  })
-  terminal:option_set(opts)
-end
+M.setup = config.set
 
 function M.create_commands()
   vim.api.nvim_create_user_command("UgatermOpen", function()
