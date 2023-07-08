@@ -66,7 +66,7 @@ function Terminal:open(cmd)
     -- Open most recently used terminal
     vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
     if cmd then
-      self:send(buf_cache.bufname, cmd)
+      self:send(cmd)
     end
   else
     -- Open new terminal
@@ -107,9 +107,17 @@ function Terminal:new_open(cmd)
   vim.api.nvim_set_option_value("filetype", config.get("filetype"), { buf = bufnr })
 end
 
+---@param cmd string
+function Terminal:send(cmd)
+  local buf_cache = self.buf_cache:get()
+  if buf_cache then
+    vim.fn.chansend(buf_cache.chan_id, { cmd, "" })
+  end
+end
+
 ---@param bufname string
 ---@param cmd string
-function Terminal:send(bufname, cmd)
+function Terminal:send_to(bufname, cmd)
   for buf_cache in self.buf_cache:iter() do
     ---@cast buf_cache BufCache
     if buf_cache.bufname == bufname then
