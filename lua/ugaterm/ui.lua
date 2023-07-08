@@ -1,8 +1,12 @@
 local lru = require("ugaterm.lru")
 local config = require("ugaterm.config")
 
+---@class BufCache
+---@field bufnr number
+---@field bufname string
+
 ---@class UI
----@field buf_cache LruCache Keys are buffer names, values are buffer ids.
+---@field buf_cache LruCache Key is bufnr, value is BufCache.
 ---@field term_winid integer|nil ID of the terminal window.
 ---@field prev_winid integer|nil ID of the window when the terminal window was opened.
 local UI = {}
@@ -12,12 +16,6 @@ function UI.new()
   return setmetatable({
     buf_cache = lru.new(),
   }, { __index = UI })
-end
-
----@param id integer|nil
----@return boolean
-local function bufid_is_valid(id)
-  return not not (id and vim.api.nvim_buf_is_valid(id))
 end
 
 ---@param winid integer|nil
@@ -54,6 +52,14 @@ function UI:_open()
   return true
 end
 
+---@param buf_cache BufCache|nil
+---@return integer|nil bufnr
+local function extract_bufnr(buf_cache)
+  if buf_cache ~= nil and vim.api.nvim_buf_is_valid(buf_cache.bufnr) then
+    return buf_cache.bufnr
+  end
+end
+
 ---Open a most recently used terminal or new one.
 ---If it's already open, exit immediately.
 function UI:open()
@@ -61,10 +67,10 @@ function UI:open()
     return
   end
 
-  local bufid = self.buf_cache:get()
-  if bufid_is_valid(bufid) then
+  local bufnr = extract_bufnr(self.buf_cache:get())
+  if bufnr then
     -- Open most recently used terminal
-    vim.api.nvim_win_set_buf(self.term_winid, bufid)
+    vim.api.nvim_win_set_buf(self.term_winid, bufnr)
     vim.cmd.startinsert()
   else
     -- Open new terminal
@@ -96,13 +102,13 @@ function UI:new_open(name)
     vim.cmd.terminal()
 
     -- Create a cache
-    local bufid = vim.api.nvim_get_current_buf()
-    self.buf_cache:set(bufname, bufid)
+    local bufnr = vim.api.nvim_get_current_buf()
+    self.buf_cache:set(bufnr, { bufnr = bufnr, bufname = bufname })
 
     -- Set buffer name and options
-    vim.api.nvim_buf_set_name(bufid, bufname)
-    vim.api.nvim_buf_set_option(bufid, "buflisted", false)
-    vim.api.nvim_buf_set_option(bufid, "filetype", config.get("filetype"))
+    vim.api.nvim_buf_set_name(bufnr, bufname)
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", config.get("filetype"), { buf = bufnr })
 
     vim.cmd.startinsert()
   end
@@ -168,15 +174,12 @@ function UI:delete()
   if not self:is_opened() then
     return
   end
-
-  local bufid = self.buf_cache:shift()
-  if not bufid_is_valid(bufid) then
-    return
-  end
+  local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
+  self.buf_cache:remove(bufnr)
 
   local in_term = vim.api.nvim_get_current_win() == self.term_winid
   -- The terminal window close too.
-  vim.api.nvim_buf_delete(bufid, { force = true })
+  vim.api.nvim_buf_delete(bufnr, { force = true })
   self.term_winid = nil
   if in_term then
     vim.fn.win_gotoid(self.prev_winid)
@@ -193,10 +196,7 @@ function UI:rename(newname)
   if not self:is_opened() then
     return
   end
-  local bufid = self.buf_cache:shift()
-  if not bufid_is_valid(bufid) then
-    return
-  end
+  local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
 
   ---@param bufname? string
   local function cleanup(bufname)
@@ -206,8 +206,8 @@ function UI:rename(newname)
       vim.notify(("buffer '%s' is already exists"):format(bufname), vim.log.levels.ERROR)
       return
     end
-    vim.api.nvim_buf_set_name(bufid, bufname)
-    self.buf_cache:set(bufname, bufid)
+    vim.api.nvim_buf_set_name(bufnr, bufname)
+    self.buf_cache:set(bufnr, { bufnr = bufnr, bufname = bufname })
   end
 
   if newname ~= "" then
@@ -215,7 +215,7 @@ function UI:rename(newname)
   else
     vim.ui.input({
       prompt = "Rename a terminal buffer: ",
-      default = vim.api.nvim_buf_get_name(bufid),
+      default = vim.api.nvim_buf_get_name(bufnr),
     }, cleanup)
   end
 end
