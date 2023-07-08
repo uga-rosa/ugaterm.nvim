@@ -144,6 +144,29 @@ function Terminal:toggle()
   end
 end
 
+---Delete a current terminal buffer.
+---If there are other terminals, open more recently used one.
+---If this is the last one, close the window too.
+function Terminal:delete()
+  if not self:is_opened() then
+    return
+  end
+  local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
+  self.buf_cache:remove(bufnr)
+
+  local in_term = vim.api.nvim_get_current_win() == self.term_winid
+  -- The terminal window close too.
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+  self.term_winid = nil
+  if in_term then
+    vim.fn.win_gotoid(self.prev_winid)
+  end
+
+  if self.buf_cache:count() > 0 then
+    self:open()
+  end
+end
+
 ---Select a terminal using vim.ui.select().
 function Terminal:select()
   if self.buf_cache:count() == 0 then
@@ -171,29 +194,6 @@ function Terminal:select()
       vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
     end
   )
-end
-
----Delete a current terminal buffer.
----If there are other terminals, open more recently used one.
----If this is the last one, close the window too.
-function Terminal:delete()
-  if not self:is_opened() then
-    return
-  end
-  local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
-  self.buf_cache:remove(bufnr)
-
-  local in_term = vim.api.nvim_get_current_win() == self.term_winid
-  -- The terminal window close too.
-  vim.api.nvim_buf_delete(bufnr, { force = true })
-  self.term_winid = nil
-  if in_term then
-    vim.fn.win_gotoid(self.prev_winid)
-  end
-
-  if self.buf_cache:count() > 0 then
-    self:open()
-  end
 end
 
 ---Rename a current terminal buffer.
