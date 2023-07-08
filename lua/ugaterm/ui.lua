@@ -20,10 +20,16 @@ local function bufid_is_valid(id)
   return not not (id and vim.api.nvim_buf_is_valid(id))
 end
 
+---@param winid integer|nil
+---@return boolean
+local function win_is_valid(winid)
+  return winid ~= nil and vim.api.nvim_win_is_valid(winid)
+end
+
 ---Return true if the terminal window is opened, else false.
 ---@return boolean
 function UI:is_opened()
-  if self.term_winid and vim.api.nvim_win_is_valid(self.term_winid) then
+  if win_is_valid(self.term_winid) then
     return true
   else
     self.term_winid = nil
