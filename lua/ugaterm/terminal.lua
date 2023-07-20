@@ -120,26 +120,6 @@ function Terminal:new_open(cmd)
   send_event("UgatermEnter")
 end
 
----@param cmd string
-function Terminal:send(cmd)
-  local buf_cache = self.buf_cache:get()
-  if buf_cache then
-    vim.fn.chansend(buf_cache.chan_id, { cmd, "" })
-  end
-end
-
----@param bufname string
----@param cmd string
-function Terminal:send_to(bufname, cmd)
-  for buf_cache in self.buf_cache:iter() do
-    ---@cast buf_cache BufCache
-    if buf_cache.bufname == bufname then
-      vim.fn.chansend(buf_cache.chan_id, { cmd, "" })
-      return
-    end
-  end
-end
-
 --- Hide a terminal window.
 function Terminal:hide()
   if not self:is_opened() then
@@ -155,40 +135,62 @@ function Terminal:hide()
 end
 
 --- Toggle a terminal window.
-function Terminal:toggle()
+---@param cmd? string
+function Terminal:toggle(cmd)
   if self:is_opened() then
     self:hide()
   else
-    self:open()
+    self:open(cmd)
   end
 end
 
---- Delete a current terminal buffer.
---- If there are other terminals, open more recently used one.
---- If this is the last one, close the window too.
+--- Delete a current terminal buffer and hide a terminal window.
 function Terminal:delete()
   if not self:is_opened() then
     return
   end
-  local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
-  self.buf_cache:remove(bufnr)
-
-  if self.buf_cache:count() == 0 then
-    send_event("UgatermLeave")
-  end
+  send_event("UgatermLeave")
 
   local in_term = vim.api.nvim_get_current_win() == self.term_winid
+  local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
+  self.buf_cache:remove(bufnr)
   -- The terminal window close too.
   vim.api.nvim_buf_delete(bufnr, { force = true })
   self.term_winid = nil
   if in_term then
     vim.fn.win_gotoid(self.prev_winid)
   end
+end
 
-  local buf_cache = self:get_cache()
+---@param x string | string[]
+---@return string[]
+local function to_list(x)
+  return type(x) == "table" and x or { x }
+end
+
+---@param cmd string | string[]
+---@param bufname string | nil
+function Terminal:send(cmd, bufname)
+  ---@type BufCache | nil
+  local buf_cache
+  if bufname == nil then
+    buf_cache = self:get_cache()
+  else
+    for cache in self.buf_cache:iter() do
+      ---@cast cache BufCache
+      if cache.bufname == bufname then
+        buf_cache = cache
+        break
+      end
+    end
+  end
+
   if buf_cache then
-    self:_open()
-    vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
+    cmd = to_list(cmd)
+    if cmd[#cmd] ~= "" then
+      table.insert(cmd, "")
+    end
+    vim.fn.chansend(buf_cache.chan_id, cmd)
   end
 end
 
