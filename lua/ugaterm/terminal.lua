@@ -53,6 +53,11 @@ function Terminal:_open()
   return true
 end
 
+---@param event string
+local function send_event(event)
+  vim.cmd("do User " .. event)
+end
+
 ---@return BufCache | nil
 function Terminal:get_cache()
   return self.buf_cache:get()
@@ -73,6 +78,7 @@ function Terminal:open(cmd)
     if cmd and cmd ~= "" then
       self:send(cmd)
     end
+    send_event("UgatermEnter")
   else
     -- Open new terminal
     self:new_open(cmd)
@@ -110,6 +116,8 @@ function Terminal:new_open(cmd)
   vim.api.nvim_buf_set_name(bufnr, bufname)
   vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
   vim.api.nvim_set_option_value("filetype", config.get("filetype"), { buf = bufnr })
+
+  send_event("UgatermEnter")
 end
 
 ---@param cmd string
@@ -137,6 +145,7 @@ function Terminal:hide()
   if not self:is_opened() then
     return
   end
+  send_event("UgatermLeave")
   local in_term = vim.api.nvim_get_current_win() == self.term_winid
   vim.api.nvim_win_hide(self.term_winid)
   self.term_winid = nil
@@ -164,6 +173,10 @@ function Terminal:delete()
   local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
   self.buf_cache:remove(bufnr)
 
+  if self.buf_cache:count() == 0 then
+    send_event("UgatermLeave")
+  end
+
   local in_term = vim.api.nvim_get_current_win() == self.term_winid
   -- The terminal window close too.
   vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -174,6 +187,7 @@ function Terminal:delete()
 
   local buf_cache = self:get_cache()
   if buf_cache then
+    self:_open()
     vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
   end
 end
@@ -199,9 +213,15 @@ function Terminal:select()
         return buf_cache.bufname
       end,
     },
-    ---@param buf_cache BufCache
+    ---@param buf_cache BufCache | nil
     function(buf_cache)
-      self:_open()
+      if buf_cache == nil then
+        -- Canceled
+        return
+      end
+      if self:_open() then
+        send_event("UgatermEnter")
+      end
       vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
     end
   )
