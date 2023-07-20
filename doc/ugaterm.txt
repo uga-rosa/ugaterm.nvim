@@ -6,6 +6,7 @@ CONTENTS						*ugaterm-contents*
 INTRODUCTION						|ugaterm-introduction|
 SETUP							|ugaterm-setup|
 COMAMNDS						|ugaterm-commands|
+AUTOCMDS						|ugaterm-autocmds|
 
 
 ==============================================================================
@@ -90,6 +91,18 @@ COMMANDS						*ugaterm-commands*
 :UgatermRename [{newname}]				*:UgatermRename*
 	Rename a current terminal buffer.
 	If {newname} is omitted, then |vim.ui.input()| is called.
+
+
+==============================================================================
+AUTOCMDS						*ugaterm-autocmds*
+
+								*UgatermEnter*
+UgatermEnter		After entering the ugaterm window. Fires only when
+			moved by command.
+
+								*UgatermLeave*
+UgatermLeave		Before leaving the ugaterm window. Fires only when
+			moved by command.
 
 
 
