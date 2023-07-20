@@ -52,43 +52,42 @@ There is NO need to call `setup()` if you don't change the default settings.
 ==============================================================================
 COMMANDS						*ugaterm-commands*
 
-								*:UgatermOpen*
-:UgatermOpen [{cmd}]
+:UgatermOpen [{cmd}]					*:UgatermOpen*
 	Open the most recently used terminal.
 	If the terminal has never been opened, |:UgatermNew| is called.
 
-								*:UgatermNew*
-:UgatermNew [{cmd}]
+
+:UgatermNew [{cmd}]					*:UgatermNew*
 	Open a new terminal.
 
-								*:UgatermSend*
-:UgatermSend {cmd}
+
+:UgatermSend {cmd}					*:UgatermSend*
 	Send {cmd} to the most recently used terminal.
 
-								*:UgatermSendTo*
-:UgatermSendTo {bufname} {cmd}
+
+:UgatermSendTo {bufname} {cmd}				*:UgatermSendTo*
 	Send {cmd} to the {bufname} terminal.
 
-								*:UgatermHide*
-:UgatermHide
+
+:UgatermHide						*:UgatermHide*
 	Hide a terminal window.
 
-								*:UgatermToggle*
-:UgatermToggle
+
+:UgatermToggle						*:UgatermToggle*
 	Toggle a terminal window (open/hide).
 
-								*:UgatermSelect*
-:UgatermSelect
+
+:UgatermSelect						*:UgatermSelect*
 	Select a terminal using |vim.ui.select()|.
 
-								*:UgatermDelete*
-:UgatermDelete
+
+:UgatermDelete						*:UgatermDelete*
 	Delete a current terminal buffer.
 	If there are other terminals, open more recently used one.
 	If it is the last one, close the window too.
 
-								*:UgatermRename*
-:UgatermRename [{newname}]
+
+:UgatermRename [{newname}]				*:UgatermRename*
 	Rename a current terminal buffer.
 	If {newname} is omitted, then |vim.ui.input()| is called.
 
