@@ -25,7 +25,7 @@ local function win_is_valid(winid)
   return winid ~= nil and vim.api.nvim_win_is_valid(winid)
 end
 
----Return true if the terminal window is opened, else false.
+--- Return true if the terminal window is opened, else false.
 ---@return boolean
 function Terminal:is_opened()
   if win_is_valid(self.term_winid) then
@@ -36,7 +36,7 @@ function Terminal:is_opened()
   end
 end
 
----Open a terminal window.
+--- Open a terminal window.
 ---@return boolean success true if it can be opened, else false
 function Terminal:_open()
   if self:is_opened() then
@@ -53,8 +53,8 @@ function Terminal:_open()
   return true
 end
 
----Open a most recently used terminal or new one.
----If it's already open, exit immediately.
+--- Open a most recently used terminal or new one.
+--- If it's already open, exit immediately.
 ---@param cmd? string
 function Terminal:open(cmd)
   if not self:_open() then
@@ -80,7 +80,7 @@ local function bufexists(bufname)
   return vim.fn.bufexists(bufname) == 1
 end
 
----Open a new terminal.
+--- Open a new terminal.
 ---@param cmd? string
 function Terminal:new_open(cmd)
   local bufname = config.get("prefix") .. (self.buf_cache:count() + 1)
@@ -127,7 +127,7 @@ function Terminal:send_to(bufname, cmd)
   end
 end
 
----Hide a terminal window.
+--- Hide a terminal window.
 function Terminal:hide()
   if not self:is_opened() then
     return
@@ -140,7 +140,7 @@ function Terminal:hide()
   end
 end
 
----Toggle a terminal window.
+--- Toggle a terminal window.
 function Terminal:toggle()
   if self:is_opened() then
     self:hide()
@@ -149,9 +149,9 @@ function Terminal:toggle()
   end
 end
 
----Delete a current terminal buffer.
----If there are other terminals, open more recently used one.
----If this is the last one, close the window too.
+--- Delete a current terminal buffer.
+--- If there are other terminals, open more recently used one.
+--- If this is the last one, close the window too.
 function Terminal:delete()
   if not self:is_opened() then
     return
@@ -172,7 +172,7 @@ function Terminal:delete()
   end
 end
 
----Select a terminal using vim.ui.select().
+--- Select a terminal using vim.ui.select().
 function Terminal:select()
   if self.buf_cache:count() == 0 then
     vim.notify("No terminals", vim.log.levels.INFO)
@@ -201,7 +201,7 @@ function Terminal:select()
   )
 end
 
----Rename a current terminal buffer.
+--- Rename a current terminal buffer.
 ---@param newname string
 function Terminal:rename(newname)
   if not self:is_opened() then
