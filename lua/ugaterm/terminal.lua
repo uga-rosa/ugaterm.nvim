@@ -53,6 +53,11 @@ function Terminal:_open()
   return true
 end
 
+---@return BufCache | nil
+function Terminal:get_cache()
+  return self.buf_cache:get()
+end
+
 --- Open a most recently used terminal or new one.
 --- If it's already open, exit immediately.
 ---@param cmd? string
@@ -61,7 +66,7 @@ function Terminal:open(cmd)
     return
   end
 
-  local buf_cache = self.buf_cache:get() --[[@as BufCache|nil]]
+  local buf_cache = self:get_cache()
   if buf_cache then
     -- Open most recently used terminal
     vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
@@ -167,8 +172,9 @@ function Terminal:delete()
     vim.fn.win_gotoid(self.prev_winid)
   end
 
-  if self.buf_cache:count() > 0 then
-    self:open()
+  local buf_cache = self:get_cache()
+  if buf_cache then
+    vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
   end
 end
 
