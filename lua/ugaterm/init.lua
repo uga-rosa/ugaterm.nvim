@@ -5,6 +5,15 @@ local M = {}
 
 M.setup = config.set
 
+---@return string[]
+local function get_bufnames()
+  local items = {}
+  for buf_cache in terminal.buf_cache:iter() do
+    table.insert(items, buf_cache.bufname)
+  end
+  return items
+end
+
 function M.create_commands()
   vim.api.nvim_create_user_command("UgatermOpen", function(opt)
     terminal:open(opt.args)
@@ -26,11 +35,7 @@ function M.create_commands()
       if not cmdline:sub(1, cursor_pos):find("^UgatermSend%s+%S*$") then
         return {}
       end
-      local items = {}
-      for buf_cache in terminal.buf_cache:iter() do
-        table.insert(items, buf_cache.bufname)
-      end
-      return items
+      return get_bufnames()
     end,
   })
   vim.api.nvim_create_user_command("UgatermHide", function()
@@ -42,9 +47,12 @@ function M.create_commands()
   vim.api.nvim_create_user_command("UgatermDelete", function()
     terminal:delete()
   end, {})
-  vim.api.nvim_create_user_command("UgatermSelect", function()
-    terminal:select()
-  end, {})
+  vim.api.nvim_create_user_command("UgatermSelect", function(opt)
+    terminal:select(opt.args)
+  end, {
+    nargs = "?",
+    complete = get_bufnames,
+  })
   vim.api.nvim_create_user_command("UgatermRename", function(opt)
     terminal:rename(opt.args)
   end, { nargs = "?" })

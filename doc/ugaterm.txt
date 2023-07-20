@@ -78,8 +78,9 @@ COMMANDS						*ugaterm-commands*
 	Toggle a terminal window (open/hide).
 
 
-:UgatermSelect						*:UgatermSelect*
-	Select a terminal using |vim.ui.select()|.
+:UgatermSelect [{bufname}]				*:UgatermSelect*
+	Select the {bufname} terminal. If {bufname} is omitted, using
+	|vim.ui.select()|.
 
 
 :UgatermDelete						*:UgatermDelete*

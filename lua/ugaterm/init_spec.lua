@@ -6,6 +6,8 @@ describe("Test for init.lua", function()
     -- `2` means full match with a command
     assert.equals(2, vim.fn.exists(":UgatermOpen"))
     assert.equals(2, vim.fn.exists(":UgatermNew"))
+    assert.equals(2, vim.fn.exists(":UgatermSend"))
+    assert.equals(2, vim.fn.exists(":UgatermSendTo"))
     assert.equals(2, vim.fn.exists(":UgatermHide"))
     assert.equals(2, vim.fn.exists(":UgatermToggle"))
     assert.equals(2, vim.fn.exists(":UgatermDelete"))

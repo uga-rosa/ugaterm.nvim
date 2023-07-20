@@ -193,7 +193,23 @@ function Terminal:delete()
 end
 
 --- Select a terminal using vim.ui.select().
-function Terminal:select()
+---@param name? string
+function Terminal:select(name)
+  if name then
+    for buf_cache in self.buf_cache:iter() do
+      ---@cast buf_cache BufCache
+      if buf_cache.bufname == name then
+        if self:_open() then
+          send_event("UgatermEnter")
+        end
+        vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
+        return
+      end
+    end
+    vim.notify("Invalid buffer name: " .. name, vim.log.levels.ERROR)
+    return
+  end
+
   if self.buf_cache:count() == 0 then
     vim.notify("No terminals", vim.log.levels.INFO)
     return
