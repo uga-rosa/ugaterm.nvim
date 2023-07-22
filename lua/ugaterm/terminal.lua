@@ -7,19 +7,20 @@ local config = require("ugaterm.config")
 ---@field chan_id integer
 
 ---@class Terminal
----@field buf_cache LruCache Key is bufnr, value is BufCache.
----@field term_winid integer|nil ID of the terminal window.
----@field prev_winid integer|nil ID of the window when the terminal window was opened.
-local Terminal = {}
+---@field buf_cache LruCache Key is bufname, value is BufCache.
+---@field term_winid? integer ID of the terminal window.
+---@field prev_winid? integer ID of the window when the terminal window was opened.
+local Terminal = {
+  buf_cache = lru.new(),
+}
 
----@return Terminal
-function Terminal.new()
-  return setmetatable({
-    buf_cache = lru.new(),
-  }, { __index = Terminal })
+---@param bufname? string
+---@return BufCache?
+function Terminal:get_cache(bufname)
+  return self.buf_cache:get(bufname)
 end
 
----@param winid integer|nil
+---@param winid? integer
 ---@return boolean
 local function win_is_valid(winid)
   return winid ~= nil and vim.api.nvim_win_is_valid(winid)
@@ -38,7 +39,7 @@ end
 
 --- Open a terminal window.
 ---@return boolean success true if it can be opened, else false
-function Terminal:_open()
+function Terminal:open_win()
   if self:is_opened() then
     return false
   end
@@ -53,109 +54,91 @@ function Terminal:_open()
   return true
 end
 
----@param event string
-local function send_event(event)
-  vim.cmd("do User " .. event)
-end
-
----@return BufCache | nil
-function Terminal:get_cache()
-  return self.buf_cache:get()
-end
-
---- Open a most recently used terminal or new one.
---- If it's already open, exit immediately.
----@param cmd? string
-function Terminal:open(cmd)
-  if not self:_open() then
-    return
-  end
-
-  local buf_cache = self:get_cache()
-  if buf_cache then
-    -- Open most recently used terminal
-    vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
-    if cmd and cmd ~= "" then
-      self:send(cmd)
-    end
-    send_event("UgatermEnter")
-  else
-    -- Open new terminal
-    self:new_open(cmd)
-  end
-end
-
 ---@param bufname string
 ---@return boolean
 local function bufexists(bufname)
   return vim.fn.bufexists(bufname) == 1
 end
 
---- Open a new terminal.
----@param cmd? string
-function Terminal:new_open(cmd)
-  local bufname = config.get("prefix") .. (self.buf_cache:count() + 1)
-  if bufexists(bufname) then
-    vim.notify(("buffer '%s' is already exists"):format(bufname), vim.log.levels.ERROR)
-    return
+--- Open a most recently used terminal or new one.
+--- If it's already open, exit immediately.
+---@param flags { new: boolean?, toggle: boolean?, select: boolean? }
+---@param name? string
+---@param cmd string | string[]
+function Terminal:open(flags, name, cmd)
+  ---@param buf_cache? BufCache
+  local function cleanup(buf_cache)
+    if not flags.new and buf_cache then
+      -- Open the most recently used terminal.
+      vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
+    else
+      -- Open a new terminal.
+      name = name or config.get("prefix") .. (self.buf_cache:count() + 1)
+      if bufexists(name) then
+        vim.notify(("buffer '%s' is already exists"):format(name), vim.log.levels.ERROR)
+        return
+      end
+
+      -- Create a cache
+      local bufnr = vim.api.nvim_create_buf(false, false)
+      vim.api.nvim_win_set_buf(self.term_winid, bufnr)
+      local chan_id = vim.fn.termopen(vim.opt.shell:get(), vim.empty_dict())
+      self.buf_cache:set(name, { bufnr = bufnr, bufname = name, chan_id = chan_id })
+
+      vim.api.nvim_buf_set_name(bufnr, name)
+      vim.api.nvim_set_option_value("filetype", config.get("filetype"), { buf = bufnr })
+    end
+
+    self:send(cmd)
+    vim.cmd("do User UgatermEnter")
   end
 
-  self:_open()
-
-  local bufnr = vim.api.nvim_create_buf(false, false)
-  vim.api.nvim_win_set_buf(self.term_winid, bufnr)
-  local chan_id = vim.fn.termopen(vim.opt.shell:get(), vim.empty_dict())
-  if cmd and cmd ~= "" then
-    vim.fn.chansend(chan_id, { cmd, "" })
+  if flags.select then
+    local buf_caches = vim.iter(self.buf_cache:iter()):totable()
+    vim.ui.select(
+      buf_caches,
+      {
+        prompt = "Select terminal: ",
+        ---@param buf_cache BufCache
+        format_item = function(buf_cache)
+          return buf_cache.bufname
+        end,
+      },
+      ---@param buf_cache? BufCache
+      function(buf_cache)
+        if buf_cache then
+          self:open_win()
+          cleanup(buf_cache)
+        end
+      end
+    )
+  else
+    if self:open_win() or flags.new then
+      local buf_cache = self:get_cache(name)
+      cleanup(buf_cache)
+    elseif flags.toggle then
+      self:hide({})
+    end
   end
-
-  -- Create a cache
-  self.buf_cache:set(bufnr, { bufnr = bufnr, bufname = bufname, chan_id = chan_id })
-
-  -- Set buffer name and options
-  vim.api.nvim_buf_set_name(bufnr, bufname)
-  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
-  vim.api.nvim_set_option_value("filetype", config.get("filetype"), { buf = bufnr })
-
-  send_event("UgatermEnter")
 end
 
 --- Hide a terminal window.
-function Terminal:hide()
+---@param flags { delete: boolean? }
+function Terminal:hide(flags)
   if not self:is_opened() then
     return
   end
-  send_event("UgatermLeave")
-  local in_term = vim.api.nvim_get_current_win() == self.term_winid
-  vim.api.nvim_win_hide(self.term_winid)
-  self.term_winid = nil
-  if in_term then
-    vim.fn.win_gotoid(self.prev_winid)
-  end
-end
+  vim.cmd("do User UgatermLeave")
 
---- Toggle a terminal window.
----@param cmd? string
-function Terminal:toggle(cmd)
-  if self:is_opened() then
-    self:hide()
+  local in_term = vim.api.nvim_get_current_win() == self.term_winid
+  if flags.delete then
+    local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
+    self.buf_cache:remove(bufnr)
+    -- The terminal window close too.
+    vim.api.nvim_buf_delete(bufnr, { force = true })
   else
-    self:open(cmd)
+    vim.api.nvim_win_hide(self.term_winid)
   end
-end
-
---- Delete a current terminal buffer and hide a terminal window.
-function Terminal:delete()
-  if not self:is_opened() then
-    return
-  end
-  send_event("UgatermLeave")
-
-  local in_term = vim.api.nvim_get_current_win() == self.term_winid
-  local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
-  self.buf_cache:remove(bufnr)
-  -- The terminal window close too.
-  vim.api.nvim_buf_delete(bufnr, { force = true })
   self.term_winid = nil
   if in_term then
     vim.fn.win_gotoid(self.prev_winid)
@@ -163,30 +146,25 @@ function Terminal:delete()
 end
 
 ---@param x string | string[]
----@return string[]
-local function to_list(x)
-  return type(x) == "table" and x or { x }
+---@return boolean
+local function is_empty(x)
+  if type(x) == "table" then
+    return table.concat(x, ""):find("^%s*$") ~= nil
+  else
+    return x == ""
+  end
 end
 
 ---@param cmd string | string[]
----@param bufname string | nil
+---@param bufname? string
 function Terminal:send(cmd, bufname)
-  ---@type BufCache | nil
-  local buf_cache
-  if bufname == nil then
-    buf_cache = self:get_cache()
-  else
-    for cache in self.buf_cache:iter() do
-      ---@cast cache BufCache
-      if cache.bufname == bufname then
-        buf_cache = cache
-        break
-      end
-    end
+  if is_empty(cmd) then
+    return
   end
 
+  local buf_cache = self:get_cache(bufname)
   if buf_cache then
-    cmd = to_list(cmd)
+    cmd = type(cmd) == "table" and cmd or { cmd } --[[@as string[] ]]
     if cmd[#cmd] ~= "" then
       table.insert(cmd, "")
     end
@@ -194,83 +172,33 @@ function Terminal:send(cmd, bufname)
   end
 end
 
---- Select a terminal using vim.ui.select().
----@param bufname? string
-function Terminal:select(bufname)
-  if bufname and bufname ~= "" then
-    for buf_cache in self.buf_cache:iter() do
-      ---@cast buf_cache BufCache
-      if buf_cache.bufname == bufname then
-        if self:_open() then
-          send_event("UgatermEnter")
-        end
-        vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
-        return
-      end
-    end
-    vim.notify("Invalid buffer name: " .. bufname, vim.log.levels.ERROR)
-    return
-  end
-
-  if self.buf_cache:count() == 0 then
-    vim.notify("No terminals", vim.log.levels.INFO)
-    return
-  end
-  ---@type BufCache[]
-  local buf_caches = {}
-  for buf_cache in self.buf_cache:iter() do
-    table.insert(buf_caches, buf_cache)
-  end
-  vim.ui.select(
-    buf_caches,
-    {
-      prompt = "Select terminals: ",
-      ---@param buf_cache BufCache
-      ---@return string
-      format_item = function(buf_cache)
-        return buf_cache.bufname
-      end,
-    },
-    ---@param buf_cache BufCache | nil
-    function(buf_cache)
-      if buf_cache == nil then
-        -- Canceled
-        return
-      end
-      if self:_open() then
-        send_event("UgatermEnter")
-      end
-      vim.api.nvim_win_set_buf(self.term_winid, buf_cache.bufnr)
-    end
-  )
-end
-
 --- Rename a current terminal buffer.
----@param newname string
-function Terminal:rename(newname)
-  if not self:is_opened() then
+---@param newname? string
+---@param target? string
+function Terminal:rename(newname, target)
+  local buf_cache = self:get_cache(target)
+  if not (buf_cache and (target or self:is_opened())) then
     return
   end
-  local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
 
   ---@param bufname? string
   local function cleanup(bufname)
-    if bufname == nil or bufname == "" then
-      return
+    if not bufname or bufname == "" then
+      -- Canceled
     elseif bufexists(bufname) then
-      vim.notify(("buffer '%s' is already exists"):format(bufname), vim.log.levels.ERROR)
-      return
+      vim.notify(("Buffer '%s' is already exists"):format(bufname), vim.log.levels.ERROR)
+    else
+      vim.api.nvim_buf_set_name(buf_cache.bufnr, bufname)
+      buf_cache.bufname = bufname
     end
-    vim.api.nvim_buf_set_name(bufnr, bufname)
-    self.buf_cache:set(bufnr, { bufnr = bufnr, bufname = bufname })
   end
 
-  if newname ~= "" then
+  if newname and newname ~= "" then
     cleanup(newname)
   else
     vim.ui.input({
-      prompt = "Rename a terminal buffer: ",
-      default = vim.api.nvim_buf_get_name(bufnr),
+      prompt = "Rename the terminal buffer: ",
+      default = buf_cache.bufname,
     }, cleanup)
   end
 end

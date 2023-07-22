@@ -1,61 +1,139 @@
 local config = require("ugaterm.config")
-local terminal = require("ugaterm.terminal").new()
+local terminal = require("ugaterm.terminal")
 
 local M = {}
 
 M.setup = config.set
 
+---@class ParsedArgs
+---@field [1] string[]
+---@field boolean table<string, boolean?>
+---@field string table<string, string?>
+
+---@param fargs string[]
+---@param options { boolean: string[], string: string[] }
+---@return ParsedArgs
+local function parse(fargs, options)
+  ---@type ParsedArgs
+  local parsedArgs = {
+    [1] = {},
+    boolean = {},
+    string = {},
+  }
+  local i = 1
+  while i <= #fargs do
+    local arg = fargs[i]
+    local flag = arg:sub(2)
+    if vim.startswith(arg, "-") then
+      if vim.list_contains(options.string or {}, flag) then
+        i = i + 1
+        parsedArgs.string[flag] = fargs[i]
+      elseif vim.list_contains(options.boolean or {}, flag) then
+        parsedArgs.boolean[flag] = true
+      end
+    else
+      table.insert(parsedArgs[1], arg)
+    end
+    i = i + 1
+  end
+  return parsedArgs
+end
+
 ---@return string[]
 local function get_bufnames()
-  local items = {}
-  for buf_cache in terminal.buf_cache:iter() do
-    table.insert(items, buf_cache.bufname)
-  end
-  return items
+  return vim
+    .iter(terminal.buf_cache:iter())
+    :map(function(buf_cache)
+      return buf_cache.bufname
+    end)
+    :totable()
 end
 
 function M.create_commands()
   vim.api.nvim_create_user_command("UgatermOpen", function(opt)
-    terminal:open(opt.args)
-  end, { nargs = "?" })
-  vim.api.nvim_create_user_command("UgatermNew", function(opt)
-    terminal:new_open(opt.args)
-  end, { nargs = "?" })
-  vim.api.nvim_create_user_command("UgatermSend", function(opt)
-    terminal:send(opt.args)
-  end, { nargs = 1 })
-  vim.api.nvim_create_user_command("UgatermSendTo", function(opt)
-    terminal:send_to(opt.fargs[1], table.concat(opt.fargs, " ", 2))
+    local parsedArgs = parse(opt.fargs, {
+      boolean = { "new", "toggle", "select" },
+      string = { "name" },
+    })
+    local cmd
+    if opt.range == 0 then
+      cmd = table.concat(parsedArgs[1], " ")
+    else
+      cmd = vim.api.nvim_buf_get_lines(0, opt.line1 - 1, opt.line2, true) --[[@as string[] ]]
+    end
+    parsedArgs[1] = nil
+    local name = parsedArgs.string.name
+    terminal:open(parsedArgs.boolean, name, cmd)
   end, {
-    nargs = "+",
+    nargs = "*",
+    range = true,
+    ---@param _ string
     ---@param cmdline string
     ---@param cursor_pos integer
     ---@return string[]
     complete = function(_, cmdline, cursor_pos)
-      if not cmdline:sub(1, cursor_pos):find("^UgatermSend%s+%S*$") then
-        return {}
+      if cmdline:sub(1, cursor_pos):find("%-name%s+%S*$") then
+        return get_bufnames()
       end
-      return get_bufnames()
+      local items = { "-new", "-toggle", "-select", "-name" }
+      for i = #items, 1, -1 do
+        if cmdline:find(items[i], 1, true) then
+          table.remove(items, i)
+        end
+      end
+      return items
     end,
   })
-  vim.api.nvim_create_user_command("UgatermHide", function()
-    terminal:hide()
-  end, {})
-  vim.api.nvim_create_user_command("UgatermToggle", function()
-    terminal:toggle()
-  end, {})
-  vim.api.nvim_create_user_command("UgatermDelete", function()
-    terminal:delete()
-  end, {})
-  vim.api.nvim_create_user_command("UgatermSelect", function(opt)
-    terminal:select(opt.args)
+
+  vim.api.nvim_create_user_command("UgatermHide", function(opt)
+    local parsedArgs = parse(opt.fargs, { boolean = { "delete" } })
+    terminal:hide(parsedArgs.boolean)
   end, {
     nargs = "?",
-    complete = get_bufnames,
+    complete = function()
+      return { "-delete" }
+    end,
   })
+
+  vim.api.nvim_create_user_command("UgatermSend", function(opt)
+    local parsedArgs = parse(opt.fargs, { string = { "name" } })
+    local cmd = table.concat(parsedArgs[1], " ")
+    if cmd == "" then
+      vim.notify("No command", vim.log.levels.ERROR)
+    else
+      terminal:send(cmd, parsedArgs.string.name)
+    end
+  end, {
+    nargs = "+",
+    ---@param _ string
+    ---@param cmdline string
+    ---@param cursor_pos integer
+    ---@return string[]
+    complete = function(_, cmdline, cursor_pos)
+      if cmdline:sub(1, cursor_pos):find("%-name%s+%S*$") then
+        return get_bufnames()
+      end
+      return { "-name" }
+    end,
+  })
+
   vim.api.nvim_create_user_command("UgatermRename", function(opt)
-    terminal:rename(opt.args)
-  end, { nargs = "?" })
+    local parsedArgs = parse(opt.fargs, { string = { "target" } })
+    local newname = parsedArgs[1][1]
+    terminal:rename(newname, parsedArgs.string.target)
+  end, {
+    nargs = "*",
+    ---@param _ string
+    ---@param cmdline string
+    ---@param cursor_pos integer
+    ---@return string[]
+    complete = function(_, cmdline, cursor_pos)
+      if cmdline:sub(1, cursor_pos):find("%-target%s+%S*$") then
+        return get_bufnames()
+      end
+      return { "-target" }
+    end,
+  })
 end
 
 return M
