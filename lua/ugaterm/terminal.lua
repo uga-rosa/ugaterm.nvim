@@ -94,7 +94,7 @@ function Terminal:open(flags, name, cmd)
   end
 
   if flags.select then
-    local buf_caches = vim.iter(self.buf_cache:iter()):totable()
+    local buf_caches = self.buf_cache:get_all()
     vim.ui.select(
       buf_caches,
       {
