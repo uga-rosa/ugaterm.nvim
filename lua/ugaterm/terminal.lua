@@ -64,7 +64,7 @@ end
 --- If it's already open, exit immediately.
 ---@param flags { new: boolean?, toggle: boolean?, select: boolean? }
 ---@param name? string
----@param cmd string | string[]
+---@param cmd? string | string[]
 function Terminal:open(flags, name, cmd)
   ---@param buf_cache? BufCache
   local function cleanup(buf_cache)
@@ -145,17 +145,17 @@ function Terminal:hide(flags)
   end
 end
 
----@param x string | string[]
+---@param x? string | string[]
 ---@return boolean
 local function is_empty(x)
   if type(x) == "table" then
     return table.concat(x, ""):find("^%s*$") ~= nil
   else
-    return x == ""
+    return x == nil or x == ""
   end
 end
 
----@param cmd string | string[]
+---@param cmd? string | string[]
 ---@param bufname? string
 function Terminal:send(cmd, bufname)
   if is_empty(cmd) then
