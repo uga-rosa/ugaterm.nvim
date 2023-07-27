@@ -138,4 +138,13 @@ function LruCache:iter()
   end
 end
 
+---@return unknown[]
+function LruCache:get_all()
+  local nodes = {}
+  for node in self:iter() do
+    table.insert(nodes, node)
+  end
+  return nodes
+end
+
 return LruCache
