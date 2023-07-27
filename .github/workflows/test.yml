@@ -23,8 +23,8 @@ jobs:
     - name: Setup neovim
       uses: rhysd/action-setup-vim@v1
       with:
-        version: nightly
         neovim: true
+        version: stable
 
     - name: Setup lua
       uses: leafo/gh-actions-lua@v8

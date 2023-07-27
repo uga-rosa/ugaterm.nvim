@@ -19,7 +19,8 @@ A terminal plugin for Neovim.
 
 	Requirements:
 
-	- Neovim (nightly)	No support for anything but the latest neovim.
+	- Neovim	It may work with older Neovim, but only the latest
+			stable release is guaranteed to work.
 
 
 ==============================================================================
