@@ -95,6 +95,10 @@ function Terminal:open(flags, name, cmd)
 
   if flags.select then
     local buf_caches = self.buf_cache:get_all()
+    if #buf_caches == 0 then
+      vim.notify("No terminals", vim.log.levels.INFO)
+      return
+    end
     vim.ui.select(
       buf_caches,
       {
