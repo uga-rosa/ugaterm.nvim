@@ -133,7 +133,8 @@ function Terminal:hide(flags)
   local in_term = vim.api.nvim_get_current_win() == self.term_winid
   if flags.delete then
     local bufnr = vim.api.nvim_win_get_buf(self.term_winid)
-    self.buf_cache:remove(bufnr)
+    local buf_name = vim.api.nvim_buf_get_name(bufnr)
+    self.buf_cache:remove(buf_name)
     -- The terminal window close too.
     vim.api.nvim_buf_delete(bufnr, { force = true })
   else
