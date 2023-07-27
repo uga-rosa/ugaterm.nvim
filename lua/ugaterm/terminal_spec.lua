@@ -11,6 +11,8 @@ local function num_win()
   return vim.fn.winnr("$")
 end
 
+vim.opt.shell = "bash"
+
 describe("Test for terminal", function()
   before_each(function()
     vim.cmd("silent %bwipeout!")

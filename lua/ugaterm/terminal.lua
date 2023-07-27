@@ -82,7 +82,9 @@ function Terminal:open(flags, name, cmd)
       -- Create a cache
       local bufnr = vim.api.nvim_create_buf(false, false)
       vim.api.nvim_win_set_buf(self.term_winid, bufnr)
-      local chan_id = vim.fn.termopen(vim.opt.shell:get(), vim.empty_dict())
+      ---@diagnostic disable-next-line:undefined-field
+      local shell = vim.opt.shell:get()
+      local chan_id = vim.fn.termopen(shell, vim.empty_dict())
       self.buf_cache:set(name, { bufnr = bufnr, bufname = name, chan_id = chan_id })
 
       vim.api.nvim_buf_set_name(bufnr, name)
