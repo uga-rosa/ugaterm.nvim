@@ -189,8 +189,9 @@ function Terminal:rename(newname, target)
   ---@param bufname? string
   local function cleanup(bufname)
     if not bufname or bufname == "" then
-      -- Canceled
-    elseif bufexists(bufname) then
+      return
+    end
+    if bufexists(bufname) then
       vim.notify(("Buffer '%s' is already exists"):format(bufname), vim.log.levels.ERROR)
     else
       vim.api.nvim_buf_set_name(buf_cache.bufnr, bufname)
