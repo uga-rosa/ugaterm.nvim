@@ -6,11 +6,13 @@ on:
       - main
     paths:
       - '**.lua'
+      - '.github/workflows/*.yml'
   pull_request:
     branches:
       - main
     paths:
       - '**.lua'
+      - '.github/workflows/*.yml'
 
 jobs:
   integration:
