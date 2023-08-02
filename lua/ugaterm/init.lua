@@ -41,12 +41,11 @@ end
 
 ---@return string[]
 local function get_bufnames()
-  return vim
-    .iter(terminal.buf_cache:iter())
-    :map(function(buf_cache)
-      return buf_cache.bufname
-    end)
-    :totable()
+  ---@param buf_cache BufCache
+  ---@return string
+  return vim.tbl_map(function(buf_cache)
+    return buf_cache.bufname
+  end, terminal.buf_cache:get_all())
 end
 
 function M.create_commands()
