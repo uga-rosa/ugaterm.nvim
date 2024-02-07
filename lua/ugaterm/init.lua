@@ -25,10 +25,10 @@ local function parse(fargs, options)
     local arg = fargs[i]
     local flag = arg:sub(2)
     if vim.startswith(arg, "-") then
-      if vim.list_contains(options.string or {}, flag) then
+      if vim.tbl_contains(options.string or {}, flag) then
         i = i + 1
         parsedArgs.string[flag] = fargs[i]
-      elseif vim.list_contains(options.boolean or {}, flag) then
+      elseif vim.tbl_contains(options.boolean or {}, flag) then
         parsedArgs.boolean[flag] = true
       end
     else
