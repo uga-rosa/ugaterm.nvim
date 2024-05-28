@@ -51,7 +51,7 @@ end
 function M.create_commands()
   vim.api.nvim_create_user_command("UgatermOpen", function(opt)
     local parsedArgs = parse(opt.fargs, {
-      boolean = { "new", "toggle", "select" },
+      boolean = { "new", "toggle", "select", "keep_cursor" },
       string = { "name" },
     })
     local cmd
@@ -74,7 +74,7 @@ function M.create_commands()
       if cmdline:sub(1, cursor_pos):find("%-name%s+%S*$") then
         return get_bufnames()
       end
-      local items = { "-new", "-toggle", "-select", "-name" }
+      local items = { "-new", "-toggle", "-select", "-keep_cursor", "-name" }
       for i = #items, 1, -1 do
         if cmdline:find(items[i], 1, true) then
           table.remove(items, i)

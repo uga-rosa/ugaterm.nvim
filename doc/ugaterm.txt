@@ -45,6 +45,7 @@ COMMANDS						*ugaterm-commands*
 			recently used one.
 	-toggle		If the terminal is already open, it will be closed.
 	-select		Uses |vim.ui.select()| to select the terminal to open.
+	-keep_cursor	Open a terminal without moving the cursor.
 
 
 							*:UgatermHide*

@@ -62,7 +62,7 @@ end
 
 --- Open a most recently used terminal or new one.
 --- If it's already open, exit immediately.
----@param flags { new: boolean?, toggle: boolean?, select: boolean? }
+---@param flags { new: boolean?, toggle: boolean?, select: boolean?, keep_cursor: boolean? }
 ---@param name? string
 ---@param cmd? string | string[]
 function Terminal:open(flags, name, cmd)
@@ -93,6 +93,11 @@ function Terminal:open(flags, name, cmd)
 
     self:send(cmd)
     vim.cmd("do User UgatermEnter")
+    if flags.keep_cursor then
+      vim.schedule(function()
+        vim.fn.win_gotoid(self.prev_winid)
+      end)
+    end
   end
 
   if flags.select then
