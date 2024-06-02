@@ -129,6 +129,8 @@ function Terminal:open(flags, name, cmd)
       cleanup(buf_cache)
     elseif flags.toggle then
       self:hide({})
+    else
+      self:send(cmd)
     end
   end
 end
