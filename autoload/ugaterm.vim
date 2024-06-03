@@ -20,7 +20,7 @@ endfunction
 
 function ugaterm#send(opts) abort
   let opts = {}
-  let opts.name = get(a:opts, 'name', '')
+  let opts.name = get(a:opts, 'name', v:null)
   let opts.cmd = get(a:opts, 'cmd', '')
 
   if opts.cmd ==# ''
